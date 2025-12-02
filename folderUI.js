@@ -86,6 +86,18 @@ async function selectSceneFolder(scene) {
   logSceneBtn = addSimpleButton('log-scene', 'LOG',buttonContainer);
   logSceneBtn.addEventListener('click', async () => {    console.log("SCENE:",scene) }); 
 
+  // copy prompts
+  copyPromptsBtn = addSimpleButton('copy-prompts-btn', 'MJ Prompts',buttonContainer);
+  copyPromptsBtn.addEventListener('click', async () => {   
+     //console.log("SCENE:",scene) 
+     let prompts_string = ""
+     for(shot of scene.shots){
+        prompts_string += shot.shotinfo.prompt + "\n----\n";
+     }
+     console.log(prompts_string)
+     await navigator.clipboard.writeText(prompts_string);
+    }); 
+
   // Add TAG Button
   tagsContainer = await createTagsContainer(scene,sceneSettingsContainer);
   await artbookUI.createAddTagButton(buttonContainer, (img) => {
