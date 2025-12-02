@@ -115,7 +115,8 @@ function CreateTask(shot) {
       }
 
       this.setStatus(EnumShotStatus.downloading)      
-      for (const url of task.resultUrls) {        
+      for (const url of task.resultUrls) {    
+          /*    
           const urlObj = new URL(url);
           const urlPath = urlObj.pathname;
           const fileName = urlPath.split('/').pop();
@@ -134,7 +135,8 @@ function CreateTask(shot) {
           const fileHandle = await resultsHandle.getFileHandle(fileName, { create: true });
           const writable = await fileHandle.createWritable();
           await writable.write(blob);
-          await writable.close();
+          await writable.close();*/
+          await downloadURL(url, resultsHandle);
       }
 
       //task.status = "downloaded";

@@ -159,3 +159,34 @@ async function getRelativePath(fileHandle, dirHandle, path = '') {
     }
     return null;
 }
+
+
+async function downloadURL(url, directoryHandle) {
+    try {
+        const urlObj = new URL(url);
+        const fileName = urlObj.pathname.split('/').pop();
+
+        // Check if the file already exists
+        try {
+            await directoryHandle.getFileHandle(fileName);
+            console.log("File already exists:", fileName);
+            return;
+        } catch (e) {
+            // File does not exist, proceed to create
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.statusText}`);
+        const blob = await response.blob();
+
+        const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+        const writable = await fileHandle.createWritable();
+        await writable.write(blob);
+        await writable.close();
+
+        //console.log(`Saved file: ${fileName}`);
+    } catch (err) {
+        //console.error(`Error saving file from ${url}:`, err);
+        throw err;
+    }
+}

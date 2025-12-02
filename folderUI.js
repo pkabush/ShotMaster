@@ -301,6 +301,31 @@ async function CreateShotInfoCardButtons(shot,parent = null)
     }
   });
 
+  url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
+  url2imgBtn.addEventListener('click', async () => {   
+    try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText) { return; }
+        
+        let url;
+        try {
+            url = new URL(clipboardText).href;
+        } catch (err) {
+            //console.log("Clipboard does not contain a valid URL:", clipboardText);
+            return;
+        }
+
+        const resultsHandle = await shot.handle.getDirectoryHandle("results", { create: true });
+        await downloadURL(url, resultsHandle);
+        console.log("Download completed!");
+        await shot.updateEvent(); 
+    } catch (err) {
+        //console.error("Error in downloadClipboardUrl:", err);
+    }
+  });
+
+
+
   return buttonContainer
 }
 // SHOT STATUS TOGGLE
