@@ -1,6 +1,5 @@
 
 
-
 async function readArtbookData(){
     window.artbook = [];
     window.artbookDirHandle = await rootDirHandle.getDirectoryHandle("REFS", { create: true } );
@@ -42,10 +41,13 @@ async function LoadArtItem(itemName, itemHandle,itemType){
         async loadImages() {
             for await (const [name, fileHandle] of this.handle.entries()) {
                     if (fileHandle.kind !== "file") continue;
+                    if (name.toLowerCase().endsWith(".json")) continue; // skip JSON files
+
                     this.images.push( {
                         name:name,
                         handle:fileHandle,
                         path: this.path + "/" + name,
+                        data: await loadBoundJson(this.handle,name + ".json"),
                         async createTagItem(parent = null,callback = null) {
                             const tagDiv = document.createElement("div");
                             tagDiv.className = "tag-item";
@@ -101,7 +103,53 @@ async function LoadArtItem(itemName, itemHandle,itemType){
                             if (parent) parent.appendChild(tagDiv);
                             return tagDiv;
                         },
+                        async createImagePanel(parent = null) {
+                            const panel = document.createElement("div");                            
+                            panel.className = "image-panel";
+                            panel.style.display = "none"; 
+                            panel.style.flexDirection = "column"; 
 
+                            // Add image name
+                            const nameLabel = document.createElement("div");
+                            nameLabel.textContent = this.name; // display the image name
+                            nameLabel.style.fontSize = "18px";
+                            nameLabel.style.fontWeight = "bold";
+                            nameLabel.style.marginBottom = "12px";
+                            panel.appendChild(nameLabel);
+                            
+                            // Add Image
+                            const img = document.createElement("img");
+                            const file = await this.handle.getFile();
+                            img.src = URL.createObjectURL(file);
+                            img.style.maxWidth = "90%";
+                            img.style.maxHeight = "90%";
+                            panel.appendChild(img);        
+                            
+                            // Buttons container
+                            buttonContainer = CreateButtonsContainer(panel);                            
+                            // Prompt field
+                            const img_prompt_field = await editableJsonField(this.data, "prompt", panel);
+                            // Buttons
+                            LOG_btn = addSimpleButton('img_log_btn', 'LOG',buttonContainer);
+                            LOG_btn.addEventListener('click', async () => { 
+                                    console.log("LOG:",this);
+                                });
+                            GPT_DescribeBtn = addSimpleButton('gpt-describe-btn', 'GPT Describe',buttonContainer);
+                            GPT_DescribeBtn.addEventListener('click', async () => { 
+                                    console.log("LOG:",this);
+
+                                    base_text = `${window.projinfo.describe_prompt}`;
+
+                                    console.log(base_text);
+                                    const answer = await GPT.txt2txt(base_text, [this]);
+                                    img_prompt_field.setText(answer);
+                                });
+                            
+
+                            if (parent) parent.appendChild(panel);
+
+                            return panel;
+                        },
 
                      })
                 }
@@ -135,6 +183,9 @@ artbookUI = {
                 const imagesContainer = document.createElement("div");
                 imagesContainer.className = "art-images-container";
 
+                const imagePanelsContainer = document.createElement("div");
+                imagePanelsContainer.className = "art-image-panels-container";
+
                 for (const imgEntry of artItem.images) {
                     const file = await imgEntry.handle.getFile();
                     const url = URL.createObjectURL(file);
@@ -157,6 +208,13 @@ artbookUI = {
                         wrapper.appendChild(img);
                         wrapper.appendChild(label);
                         imagesContainer.appendChild(wrapper);
+
+                        // Create Image panel                        
+                        const panel = await imgEntry.createImagePanel(imagePanelsContainer);
+                        img.addEventListener("click", () => {
+                            document.querySelectorAll(".image-panel").forEach(p => p.style.display = "none");
+                            panel.style.display = "flex";
+                        });                        
                     }
 
                     // --- VIDEO FILES ---
@@ -175,7 +233,7 @@ artbookUI = {
                     */
                 }
 
-                itemContainer.append(title, imagesContainer);
+                itemContainer.append(title, imagesContainer,imagePanelsContainer);
                 artTypeContainer.appendChild(itemContainer);
             }
 

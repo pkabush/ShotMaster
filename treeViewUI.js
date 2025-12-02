@@ -276,7 +276,6 @@ async function createSceneLI(scene) {
     return sceneLi;
 }
 
-
 async function loadProjectInfo(){
   default_projinfo = {
     split_shot_prompt: `
@@ -291,7 +290,9 @@ async function loadProjectInfo(){
 
 }
     `,
-
+    describe_prompt: `
+  Опиши этого персонажа как промпт для генерации картинки.
+  `
 
   }          
 
