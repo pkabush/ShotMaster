@@ -276,8 +276,32 @@ async function createSceneLI(scene) {
     return sceneLi;
 }
 
+
+async function loadProjectInfo(){
+  default_projinfo = {
+    split_shot_prompt: `
+разбей эту сцену из моего сценария на шоты, сгенерируй промпты для нейросети для генерации видео и предоставь в виде json, в ответе предоставь толкьо json в следующем формате:
+{
+  "SHOT_010" : 
+    {
+    "prompt" : "подробный промпт для нейросети генератора видео", 
+    "camera" : "focal length, shot type", 
+    "action_description" : "описания действия которое происходит для аниматора", 
+    },
+
+}
+    `,
+
+
+  }          
+
+  window.projinfo = await loadBoundJson(rootDirHandle, 'projinfo.json',default_projinfo);
+}
+
+
 // LIST FOLDERS
 async function listFolders() {  
+  await loadProjectInfo();
   await updateTreeDict();
   await updateTreeUI(); 
   await readArtbookData();

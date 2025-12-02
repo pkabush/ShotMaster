@@ -36,13 +36,7 @@ async function selectSceneFolder(scene) {
 
   generateSplitIntoShotsPromptBtn = addSimpleButton('generate-split-into-shots-prompt-btn', 'Generate Split Prompt',buttonContainer);
   generateSplitIntoShotsPromptBtn.addEventListener('click', async () => { 
-      base_text = `разбей эту сцену из моего сценария на шоты, сгенерируй промпты для нейросети для генерации видео и предоставь в виде json, в ответе предоставь толкьо json в следующем формате:
-      {"SHOT_010" : 
-        {"prompt" : "подробный промпт для нейросети генератора видео", 
-        "camera" : "focal length, shot type", 
-        "action_description" : "описания действия которое происходит для аниматора", } 
-        } 
-      }
+      base_text = `${window.projinfo.split_shot_prompt}
 
       ${scene.sceneinfo.script}
       `;
@@ -54,15 +48,8 @@ async function selectSceneFolder(scene) {
     console.log("SCENE",scene);
     console.log("USER_DATA",window.userdata);
 
-    base_text = `разбей эту сцену из моего сценария на шоты, сгенерируй промпты для нейросети для генерации видео и предоставь в виде json, в ответе предоставь толкьо json в следующем формате:
-    {"SHOT_010" : 
-      {"prompt" : "подробный промпт для нейросети генератора видео", 
-      "camera" : "focal length, shot type", 
-      "action_description" : "описания действия которое происходит для аниматора", } 
-      } 
-    }
+    base_text = `${window.projinfo.split_shot_prompt}
 
-    Используй картинки которые я вышлю далее как референс.
 
     ${scene.sceneinfo.script}
     `;

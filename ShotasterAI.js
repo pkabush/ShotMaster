@@ -87,6 +87,15 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   //https://openrouter.ai/
   await createEditableKeyField(window.userdata,"openrouter_API_KEY",container)
 
+  logProjInfoBtn = addSimpleButton('log-proj-info-btn', 'LOG ProjInfo',container);
+  logProjInfoBtn.addEventListener('click', async () => { 
+        console.log("PROJECT INFO:",window.projinfo);
+        console.log("USERDATA:",window.userdata);
+    });
+
+
+  await editableJsonField(window.projinfo, "split_shot_prompt", container);
+
   contentsPanel.appendChild(container);
 });
 
