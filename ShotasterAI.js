@@ -87,15 +87,32 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   //https://openrouter.ai/
   await createEditableKeyField(window.userdata,"openrouter_API_KEY",container)
 
-  logProjInfoBtn = addSimpleButton('log-proj-info-btn', 'LOG ProjInfo',container);
+    // Buttons container
+  buttonContainer = CreateButtonsContainer(container);  
+
+  logProjInfoBtn = addSimpleButton('log-proj-info-btn', 'LOG ProjInfo',buttonContainer);
   logProjInfoBtn.addEventListener('click', async () => { 
         console.log("PROJECT INFO:",window.projinfo);
         console.log("USERDATA:",window.userdata);
     });
 
+  downloadAhkFile = addSimpleButton('download-ahk-file', 'Download AHK',buttonContainer);
+  downloadAhkFile.addEventListener('click', async () => { 
+      const link = document.createElement('a');
+      link.href = 'assets/MJ_SplitPaste.exe';
+      link.download = 'MJ_SplitPaste.exe';    // Optional: sets default file name
+      document.body.appendChild(link); // Append temporarily
+      link.click();                    // Trigger download
+      document.body.removeChild(link); // Clean up
+  });
+
+
 
   await editableJsonField(window.projinfo, "split_shot_prompt", container);
   await editableJsonField(window.projinfo, "describe_prompt", container);
+
+  
+
 
   contentsPanel.appendChild(container);
 });
