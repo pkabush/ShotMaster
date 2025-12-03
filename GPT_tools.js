@@ -28,7 +28,7 @@ const GPT = {
             }
 
             const payload = {
-                model: "gpt-4o-mini",
+                model: window.projinfo.gpt_model,
                 messages
             };
 

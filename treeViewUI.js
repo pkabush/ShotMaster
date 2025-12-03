@@ -304,8 +304,8 @@ async function loadProjectInfo(){
     `,
     describe_prompt: `
   Опиши этого персонажа как промпт для генерации картинки.
-  `
-
+  `,
+  gpt_model:"gpt-4o-mini",
   }          
 
   window.projinfo = await loadBoundJson(rootDirHandle, 'projinfo.json',default_projinfo);

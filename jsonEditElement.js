@@ -127,7 +127,6 @@ async function createEditableKeyField(data, key, parent = null) {
   const label = document.createElement("label");
   label.textContent = key;
 
-
   // Input
   const input = document.createElement("input");
   input.type = "text";
@@ -154,4 +153,45 @@ async function createSpacer(parent = null,size = 500) {
   const spacer = document.createElement('div');
   spacer.style.height = `${size}px`;  
   if (parent) parent.appendChild(spacer);
+}
+
+
+function createDropdown(labelText,options,parent, onChange = null) {
+    // Create a container div
+    const container = document.createElement("div");
+    container.className = "editable-field"; 
+    // Create the label if provided
+    let label;
+
+    label = document.createElement("label");
+    label.textContent = labelText;
+    container.appendChild(label);
+
+    // Create the select element
+    const select = document.createElement("select");
+
+    // Populate the dropdown
+    options.forEach(optionText => {
+        const option = document.createElement("option");
+        option.value = optionText.toLowerCase().replace(/\s+/g, "-");
+        option.text = optionText;
+        select.appendChild(option);
+    });
+
+    // Add change listener if provided
+    if (typeof onChange === "function") {
+        select.addEventListener("change", (e) => {
+            onChange(e.target.value);
+        });
+    }
+
+    container.setValue = function(value){
+        const defaultValFormatted = value.toLowerCase().replace(/\s+/g, "-");
+        select.value = defaultValFormatted;
+    }
+
+    // Add select to container
+    container.appendChild(select);
+    if (parent) parent.appendChild(container);
+    return container;
 }
