@@ -105,7 +105,7 @@ async function createResizableTextArea( text = '', rows = 1, parent = null, onCh
   // Debounced auto-save
   let saveTimeout;
   textArea.addEventListener('input', () => {
-  console.log("text area input");
+  //console.log("text area input");
   autoResize();
   clearTimeout(saveTimeout);
   saveTimeout = setTimeout(async () => {

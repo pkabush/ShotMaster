@@ -144,7 +144,19 @@ async function LoadScene(sceneName, sceneHandle){
       }
       return tags
     },
+    // Get Tags decription
+    async getTagsString(){
+      const tags_dict = {};
+      for (const tag of await scene.getTags()) {
+        const categoryName = tag.category.name;     
+        const subCategoryName = tag.subCategory.name; 
+        const prompt = tag.data?.prompt || "";
 
+        if (!tags_dict[categoryName]) { tags_dict[categoryName] = {};}
+        tags_dict[categoryName][subCategoryName] =  prompt
+      }
+      return JSON.stringify(tags_dict,null, 2);
+    }
   }
 
   await scene.LoadShots()

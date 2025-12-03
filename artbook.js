@@ -46,6 +46,8 @@ async function LoadArtItem(itemName, itemHandle,itemType){
                     this.images.push( {
                         name:name,
                         handle:fileHandle,
+                        category:itemType,
+                        subCategory:this,
                         path: this.path + "/" + name,
                         data: await loadBoundJson(this.handle,name + ".json"),
                         async createTagItem(parent = null,callback = null) {
@@ -150,7 +152,6 @@ async function LoadArtItem(itemName, itemHandle,itemType){
 
                             return panel;
                         },
-
                      })
                 }
         },

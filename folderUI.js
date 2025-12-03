@@ -12,6 +12,7 @@ async function selectSceneFolder(scene) {
   // Create scene elements in contents panel
   // Create the prompt UI and get references to the textarea and status
 
+  const shotPreviewStrip = await createShotPreviewStrip(scene);
   const sceneSettingsContainer = document.createElement('div');
 
   // --- Shot name ---
@@ -36,28 +37,38 @@ async function selectSceneFolder(scene) {
 
   generateSplitIntoShotsPromptBtn = addSimpleButton('generate-split-into-shots-prompt-btn', 'Generate Split Prompt',buttonContainer);
   generateSplitIntoShotsPromptBtn.addEventListener('click', async () => { 
-      base_text = `${window.projinfo.split_shot_prompt}
-
+      const tags_string = await scene.getTagsString() 
+    
+      base_text = `${window.projinfo.split_shot_prompt} \n      
+      ${tags_string} \n
       ${scene.sceneinfo.script}
       `;
       navigator.clipboard.writeText(base_text)
+      console.log("GENERATED PROMPT:\n", base_text)
     });
 
   generateSplitIntoShotsPromptRefsBtn = addSimpleButton('generate-split-into-shots-prompt-refs-btn', 'Generate Split Prompt(with REFS)',buttonContainer);
   generateSplitIntoShotsPromptRefsBtn.addEventListener('click', async () => { 
-    console.log("SCENE",scene);
-    console.log("USER_DATA",window.userdata);
+    //console.log("SCENE",scene);
+    //console.log("USER_DATA",window.userdata);
+    const tags_string = await scene.getTagsString() 
 
-    base_text = `${window.projinfo.split_shot_prompt}
-
-
+    base_text = `${window.projinfo.split_shot_prompt} \n    
+    ${tags_string}\n
     ${scene.sceneinfo.script}
     `;
 
+    base_text = `${window.projinfo.split_shot_prompt} \n    
+    ${scene.sceneinfo.script}
+    `;
+
+    console.log("GENERATED PROMPT:", base_text)
     //console.log(await scene.getTags())
 
     //const answer = await OpenRouter.txt2txt(base_text); 
-    const answer = await GPT.txt2txt(base_text, await scene.getTags());
+    // this one uploads images as tags, but we only use prompts now
+    //const answer = await GPT.txt2txt(base_text, await scene.getTags());
+    const answer = await GPT.txt2txt(base_text);
     shots_json_field.setText(answer);
     
     });
@@ -68,35 +79,14 @@ async function selectSceneFolder(scene) {
     for (const key in shotdict) {
       console.log('Generating shot:', key);
       console.log('Shot data:', shotdict[key]);
-
       shothandle = await scene.handle.getDirectoryHandle(key, { create: true } );
       shotinfohandle = await shothandle.getFileHandle('shotinfo.json', { create: true } );
       shotinfo = { ...default_shotinfo, ...shotdict[key] ,...{____handle: shotinfohandle} };
-
-      scene.shots.push( {
-        name: key,
-        handle: shothandle,
-        shotinfo: shotinfo
-      });
-
       await saveBoundJson(shotinfo);
     }
+    await scene.LoadShots()
+    await shotPreviewStrip.loadShots();
   });  
-
-  logSceneBtn = addSimpleButton('log-scene', 'LOG',buttonContainer);
-  logSceneBtn.addEventListener('click', async () => {    console.log("SCENE:",scene) }); 
-
-  // copy prompts
-  copyPromptsBtn = addSimpleButton('copy-prompts-btn', 'MJ Prompts',buttonContainer);
-  copyPromptsBtn.addEventListener('click', async () => {   
-     //console.log("SCENE:",scene) 
-     let prompts_string = ""
-     for(shot of scene.shots){
-        prompts_string += shot.shotinfo.prompt + "\n----\n";
-     }
-     console.log(prompts_string)
-     await navigator.clipboard.writeText(prompts_string);
-    }); 
 
   // Add TAG Button
   tagsContainer = await createTagsContainer(scene,sceneSettingsContainer);
@@ -108,13 +98,47 @@ async function selectSceneFolder(scene) {
   });
   
 
-  createSpacer(sceneSettingsContainer);
+  // SCENE LOG
+  addSimpleButton('log-scene', 'LOG',buttonContainer, async () => {    
+    console.log("SCENE:",scene)  
+  }); 
 
-  shotPreviewStrip = await createShotPreviewStrip(scene);
+  // SHOTS LOG
+  addSimpleButton('log-tags-btn', 'LOG TAGS',buttonContainer, async () => { 
+    console.log("SCENE TAGS:\n",await scene.getTagsString() ) 
+  }); 
+
+
+  // copy prompts
+  addSimpleButton('copy-prompts-btn', 'MJ Prompts',buttonContainer, async () => {  
+     let prompts_string = ""
+     for(shot of scene.shots){
+        prompts_string += shot.shotinfo.prompt + "\n----\n";
+     }
+     console.log(prompts_string)
+     await navigator.clipboard.writeText(prompts_string);
+    }); 
+
+  // copy prompts with Tags
+  addSimpleButton('copy-prompts-tags-btn', 'MJ+TAGS',buttonContainer, async () => {  
+     const tags_string = await scene.getTagsString()
+     let prompts_string = ""
+     for(shot of scene.shots){
+        prompts_string += shot.shotinfo.prompt + "\n" + tags_string + "\n----\n";
+     }
+     console.log(prompts_string)
+     await navigator.clipboard.writeText(prompts_string);
+    }); 
+
+
+
+  createSpacer(sceneSettingsContainer); 
 
   const tabs1 = createTabContainer(contentsPanel);
   tabs1.addTab({ title: 'Scene', content: sceneSettingsContainer });
   tabs1.addTab({ title: 'Shots', content: shotPreviewStrip }); 
+
+
 }
 
 async function createTagsContainer(scene,parent = null){
@@ -170,26 +194,28 @@ async function CreateShotInfoCard(shot,parent = null) {
 // Shot Preview Strip
 async function createShotPreviewStrip(scene) {
   const container = document.createElement('div');
+  container.loadShots = async function(){
+    this.innerHTML = ''    
+    resizableArea = createResizableContainer(parent = this);
+    shotsStrip = createHorizontalContainer(resizableArea)
 
-  resizableArea = createResizableContainer(parent = container);
-  shotsStrip = createHorizontalContainer(resizableArea)
+    // --- Create and append each shot preview ---
+    for (const shot of scene.shots) {
+      const shotElement = await CreateShotPreview(shot);
+      shotsStrip.appendChild(shotElement);
+      const shot_info = await CreateShotInfoCard(shot, parent = this);
+      shot_info.style.display = 'none';
 
-  // --- Create and append each shot preview ---
-  for (const shot of scene.shots) {
-    const shotElement = await CreateShotPreview(shot);
-    shotsStrip.appendChild(shotElement);
-    const shot_info = await CreateShotInfoCard(shot, parent = container);
-    shot_info.style.display = 'none';
-
-    // --- Add click event to show corresponding info ---
-    shotElement.addEventListener('click', () => {
-      document.querySelectorAll('.shot-info').forEach(el => el.style.display = 'none');
-      shot_info.style.display = 'block';
-    });
-  }
- 
-  //add Spacer
-  createSpacer(container);
+      // --- Add click event to show corresponding info ---
+      shotElement.addEventListener('click', () => {
+        document.querySelectorAll('.shot-info').forEach(el => el.style.display = 'none');
+        shot_info.style.display = 'block';
+      });
+    }  
+    //add Spacer
+    createSpacer(this);
+  }  
+  await container.loadShots();
 
   return container;
 }
@@ -235,14 +261,17 @@ async function CreateShotPreview(shot) {
   return container;
 }
 // Simple Button
-function addSimpleButton(btn, text, parent = null)
+function addSimpleButton(btn, text, parent = null, callback = null)
 {
-  simpleBtn = document.createElement('button');
+  const simpleBtn = document.createElement('button');
   simpleBtn.id = btn;
   simpleBtn.textContent = text;
   if (parent) {parent.appendChild(simpleBtn);}
+  if (callback) {simpleBtn.addEventListener('click', callback )}; 
   return simpleBtn;
 }
+
+
 // Shot Info Card Buttons
 async function CreateShotInfoCardButtons(shot,parent = null)
 {
