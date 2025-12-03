@@ -156,7 +156,7 @@ async function createSpacer(parent = null,size = 500) {
 }
 
 
-async function createDropdown(labelText,options,parent, onChange = null) {
+function createDropdown(labelText,options,parent, onChange = null) {
     // Create a container div
     const container = document.createElement("div");
     container.className = "editable-field"; 
