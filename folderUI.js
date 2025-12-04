@@ -57,10 +57,11 @@ async function selectSceneFolder(scene) {
     ${tags_string}\n
     ${scene.sceneinfo.script}
     `;
-
+    /*
     base_text = `${window.projinfo.split_shot_prompt} \n    
     ${scene.sceneinfo.script}
     `;
+    */
 
     console.log("GENERATED PROMPT:", base_text)
     //console.log(await scene.getTags())
