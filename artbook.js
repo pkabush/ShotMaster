@@ -143,10 +143,20 @@ async function LoadArtItem(itemName, itemHandle,itemType){
                                     base_text = `${window.projinfo.describe_prompt}`;
 
                                     console.log(base_text);
-                                    const answer = await GPT.txt2txt(base_text, [this]);
+                                    const answer = await GPT.txt2txt(base_text,undefined, [this]);
                                     img_prompt_field.setText(answer);
                                 });
                             
+                            addSimpleButton('gpt-describe-env-btn', 'GPT ENV Describe',buttonContainer,async () => { 
+                                    console.log("LOG:",this);
+
+                                    base_text = `${window.projinfo.describe_env_prompt}`;
+
+                                    console.log(base_text);
+                                    const answer = await GPT.txt2txt(base_text,undefined, [this]);
+                                    img_prompt_field.setText(answer);
+                                });
+
 
                             if (parent) parent.appendChild(panel);
 

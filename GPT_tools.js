@@ -1,8 +1,8 @@
 const GPT = {
-    async txt2txt(input, images = []) {
+    async txt2txt(input,system_msg = "You are a helpful assistant.", images = [],schema = null) {
         try {
             const messages = [
-                { role: "system", content: "You are a helpful assistant." }
+                { role: "system", content: system_msg }
             ];
 
             // First add the user's text message (if provided)
@@ -32,6 +32,10 @@ const GPT = {
                 messages
             };
 
+            if (schema && schema.response_format) {
+                payload.response_format = schema.response_format;
+            }
+
             const options = {
                 method: "POST",
                 headers: {
@@ -53,7 +57,47 @@ const GPT = {
             console.error(err);
             return "Error: " + err.message;
         }
+    },
+
+    schemas : {
+        shots_schema:{
+            response_format: {
+                type: "json_schema",
+                json_schema: {
+                    name: "video_shots",
+                    strict: true,
+                    schema: {
+                    type: "object",
+                    patternProperties: {
+                        "^SHOT_[0-9]{3}$": {
+                        type: "object",
+                        properties: {
+                            prompt: {
+                            type: "string",
+                            minLength: 1
+                            },
+                            camera: {
+                            type: "string",
+                            minLength: 1
+                            },
+                            action_description: {
+                            type: "string",
+                            minLength: 1
+                            }
+                        },
+                        required: ["prompt", "camera", "action_description"],
+                        additionalProperties: false
+                        }
+                    },
+                    additionalProperties: false,
+                    minProperties: 1
+                    }
+                }
+            }
+        }
     }
+
+
 }
 
 const OpenRouter = {

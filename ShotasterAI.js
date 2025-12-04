@@ -108,6 +108,7 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
 
   await editableJsonField(window.projinfo, "split_shot_prompt", container);
   await editableJsonField(window.projinfo, "describe_prompt", container);
+  await editableJsonField(window.projinfo, "describe_env_prompt", container);  
 
   createDropdown("GPT MODEL:",[
     "gpt-4o-mini",

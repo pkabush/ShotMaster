@@ -66,10 +66,16 @@ async function selectSceneFolder(scene) {
     console.log("GENERATED PROMPT:", base_text)
     //console.log(await scene.getTags())
 
+    role =  "You are a helpful assistant. " +
+            "Always respond using ONLY valid JSON. " +
+            "Do not write explanations. " +
+            "Do not wrap the JSON in backticks. " +
+            "The entire response must be a valid JSON object." 
+
     //const answer = await OpenRouter.txt2txt(base_text); 
     // this one uploads images as tags, but we only use prompts now
     //const answer = await GPT.txt2txt(base_text, await scene.getTags());
-    const answer = await GPT.txt2txt(base_text);
+    const answer = await GPT.txt2txt(base_text,role);
     shots_json_field.setText(answer);
     
     });

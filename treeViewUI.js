@@ -305,6 +305,9 @@ async function loadProjectInfo(){
     describe_prompt: `
   Опиши этого персонажа как промпт для генерации картинки.
   `,
+    describe_env_prompt: `
+  Опиши это окружение как промпт для генерации картинки.
+  `,
   gpt_model:"gpt-4o-mini",
   }          
 
