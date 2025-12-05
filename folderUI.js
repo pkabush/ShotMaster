@@ -308,8 +308,6 @@ async function createShotPreviewStrip(scene) {
   };
   document.addEventListener("shot_remove", container.onShotRemove);
 
-
-  //await container.loadShots();
   await container.initialize();
   await container.addSceneShots(); 
   return container;

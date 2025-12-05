@@ -124,11 +124,11 @@ async function importShotDict(shot_name,shot_dict,sceneFolderHandle) {
 async function importScenesFromScript() {
     function splitScenes(text) {
     return text
-        .split(/(?=SC_\d{3})/)        // split at scene markers
-        .filter(s => /^SC_\d{3}/.test(s.trim()))   // keep only real scenes
+        .split(/(?=SC_\d{4})/)        // split at scene markers
+        .filter(s => /^SC_\d{4}/.test(s.trim()))   // keep only real scenes
         .map(s => ({
-        id: s.match(/^SC_\d{3}/)[0],
-        content: s.replace(/^SC_\d{3}/, "").trim()
+        id: s.match(/^SC_\d{4}/)[0],
+        content: s.replace(/^SC_\d{4}/, "").trim()
         }));
     }
 
