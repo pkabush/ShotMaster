@@ -85,9 +85,7 @@ async function LoadShot(shotName, shotHandle,scene){
         },
 
 
-    }
-    
-
+    }   
 
   shot.initializeTasks();
   return shot;

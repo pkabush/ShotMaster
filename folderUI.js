@@ -86,12 +86,17 @@ async function selectSceneFolder(scene) {
     for (const key in shotdict) {
       console.log('Generating shot:', key);
       console.log('Shot data:', shotdict[key]);
-      shothandle = await scene.handle.getDirectoryHandle(key, { create: true } );
-      shotinfohandle = await shothandle.getFileHandle('shotinfo.json', { create: true } );
-      shotinfo = { ...default_shotinfo, ...shotdict[key] ,...{____handle: shotinfohandle} };
-      await saveBoundJson(shotinfo);
+      // Create Directory
+      const shotHandle = await scene.handle.getDirectoryHandle(key, { create: true } );
+      // Load Shot
+      const newShot = await LoadShot(key,shotHandle,scene)      
+      // Set Its shot info
+      newShot.shotinfo =  { ...newShot.shotinfo,...shotdict[key] };
+      scene.shots.push(newShot)
+      console.log(newShot);
+      await newShot.shotinfo.save()
     }
-    await scene.LoadShots()
+    //await scene.LoadShots()
     await shotPreviewStrip.loadShots();
   });  
 
