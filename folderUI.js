@@ -160,10 +160,9 @@ async function createTagsContainer(scene,parent = null){
     });
   }
 
-
   for(const tag of scene.sceneinfo.tags){    
     img = await artbookUI.path2img(tag);
-    container.addTag(img)    
+    if (img) container.addTag(img)    
   }
 
   return container

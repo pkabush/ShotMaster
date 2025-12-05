@@ -148,6 +148,7 @@ async function LoadScene(sceneName, sceneHandle){
     async getTagsString(){
       const tags_dict = {};
       for (const tag of await scene.getTags()) {
+        if (tag == null) continue;
         const categoryName = tag.category.name;     
         const subCategoryName = tag.subCategory.name; 
         const prompt = tag.data?.prompt || "";
