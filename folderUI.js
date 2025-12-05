@@ -9,6 +9,10 @@ async function selectSceneFolder(scene) {
   document.querySelectorAll('#folders li').forEach(el => el.classList.remove('selected'));
   contentsPanel.innerHTML = '';
 
+  //dispatch scene selected event
+  const selectSceneEvent = new CustomEvent("selectscene", { detail: { } });
+  document.dispatchEvent(selectSceneEvent);
+
   // Create scene elements in contents panel
   // Create the prompt UI and get references to the textarea and status
 
@@ -84,6 +88,7 @@ async function selectSceneFolder(scene) {
   generateShotsFromJsonBtn.addEventListener('click', async () => {    
     shotdict = JSON.parse(scene.sceneinfo.shotsjson);
     for (const key in shotdict) {
+      /*
       console.log('Generating shot:', key);
       console.log('Shot data:', shotdict[key]);
       // Create Directory
@@ -93,11 +98,11 @@ async function selectSceneFolder(scene) {
       // Set Its shot info
       newShot.shotinfo =  { ...newShot.shotinfo,...shotdict[key] };
       scene.shots.push(newShot)
-      console.log(newShot);
-      await newShot.shotinfo.save()
+      await newShot.shotinfo.save()*/
+      await scene.createShot(key, shotdict[key]);
     }
     //await scene.LoadShots()
-    await shotPreviewStrip.loadShots();
+    //await shotPreviewStrip.loadShots();
   });  
 
   // Add TAG Button
@@ -142,7 +147,16 @@ async function selectSceneFolder(scene) {
      await navigator.clipboard.writeText(prompts_string);
     }); 
 
-
+  // copy prompts with Tags
+  /*
+  addSimpleButton('add-shot-btn', 'ADD SHOT',buttonContainer, async () => {      
+    const value = prompt("SHOT NAME:", "SHOT_010");
+    if (value) {
+      await scene.createShot(value);
+      await shotPreviewStrip.loadShots();
+    }
+  }); 
+  */
 
   createSpacer(sceneSettingsContainer); 
 
@@ -184,6 +198,24 @@ async function CreateShotInfoCard(shot,parent = null) {
   title.classList.add('shot-info-title');  // optional CSS class
   container.appendChild(title);
 
+  //  Editable Label
+  //createEditableLabel(shot.name,container);
+
+  const shotEditButtonContainer = CreateButtonsContainer(container);
+  // RENAME
+  addSimpleButton("rename-shot-btn","RENAME",shotEditButtonContainer,() => {
+    const result = prompt("Rename the shot:",shot.name);    
+    if (result)  { shot.renameShot(result);}
+  });
+  // DELETE
+  addSimpleButton("delete-shot-btn","DELETE",shotEditButtonContainer,() => {
+    if (confirm("Are you sure you want to delete this shot?")) {
+        shot.deleteFromDisk();
+    } 
+  });
+
+
+
   // --- Prompt TextArea ---
   //PromptTextArea = await createPromptUI(shot.handle, "prompt", container);
   await editableJsonField(shot.shotinfo, "prompt", container);
@@ -203,17 +235,28 @@ async function CreateShotInfoCard(shot,parent = null) {
   return container;
 }
 // Shot Preview Strip
-async function createShotPreviewStrip(scene) {
-  const container = document.createElement('div');
-  container.loadShots = async function(){
-    this.innerHTML = ''    
-    resizableArea = createResizableContainer(parent = this);
-    shotsStrip = createHorizontalContainer(resizableArea)
+async function createShotPreviewStrip(scene) {  
 
-    // --- Create and append each shot preview ---
-    for (const shot of scene.shots) {
+  const container = document.createElement('div');
+  container.scene = scene;
+  container.shots = []
+
+  container.initialize = async function(){    
+    const container = this;
+    const resizableArea = createResizableContainer(parent = this);
+    this.shotsStrip = createHorizontalContainer(resizableArea)
+    // ADD SHOT BUTTON    
+    addSimpleButton("add-shot","+",this.shotsStrip,async () => {
+      const value = prompt("SHOT NAME:", "SHOT_010");
+      if (value) { await container.scene.createShot(value); }
+    });
+
+    //add Spacer
+    //createSpacer(this);
+  }
+  container.addShot = async function(shot){            
       const shotElement = await CreateShotPreview(shot);
-      shotsStrip.appendChild(shotElement);
+      this.shotsStrip.appendChild(shotElement);
       const shot_info = await CreateShotInfoCard(shot, parent = this);
       shot_info.style.display = 'none';
 
@@ -221,13 +264,54 @@ async function createShotPreviewStrip(scene) {
       shotElement.addEventListener('click', () => {
         document.querySelectorAll('.shot-info').forEach(el => el.style.display = 'none');
         shot_info.style.display = 'block';
-      });
-    }  
-    //add Spacer
-    createSpacer(this);
-  }  
-  await container.loadShots();
+      }); 
 
+      container.shots.push({shot,shotElement,shot_info});
+  }
+  container.addSceneShots = async function(){
+    for (const shot of this.scene.shots) {
+      this.addShot(shot)
+    }    
+  }
+
+
+  // CALLBACKS
+  // ON SHOT CREATE
+  container.onShotCreate = (e) => {
+    if (container.isConnected == false)
+    {
+      document.removeEventListener("shot_create",container.onShotCreate);
+      return;
+    }
+    const shot = e.detail.shot;
+    if (scene == container.scene) container.addShot(e.detail.shot);
+  };
+  document.addEventListener("shot_create", container.onShotCreate);
+  // ON SHOT REMOVED
+  container.onShotRemove = (e) => {
+    if (container.isConnected == false)
+    {
+      document.removeEventListener("shot_remove",container.onShotRemove);
+      return;
+    }
+    const shot = e.detail.shot;
+    if (scene == container.scene) {
+
+      const index = container.shots.findIndex(entry => entry.shot === shot);
+      if (index !== -1) {
+        const entry = container.shots[index];
+        entry.shotElement.remove();
+        entry.shot_info.remove();
+        container.shots.splice(index, 1);
+      }
+    }
+  };
+  document.addEventListener("shot_remove", container.onShotRemove);
+
+
+  //await container.loadShots();
+  await container.initialize();
+  await container.addSceneShots(); 
   return container;
 }
 
@@ -282,11 +366,10 @@ function addSimpleButton(btn, text, parent = null, callback = null)
   return simpleBtn;
 }
 
-
 // Shot Info Card Buttons
 async function CreateShotInfoCardButtons(shot,parent = null)
 {
-  buttonContainer = CreateButtonsContainer(parent);
+  const buttonContainer = CreateButtonsContainer(parent);
   
   // --- TEST button ---
   testBtn = addSimpleButton('testBtn', 'Log shot', buttonContainer);
@@ -319,6 +402,7 @@ async function CreateShotInfoCardButtons(shot,parent = null)
     }
   });
 
+  // IMG 2 VIDEO
   img2videoBtn = addSimpleButton('img2videoBtn',"img2video", buttonContainer);
   img2videoBtn.addEventListener('click', async () => {   
     console.log("Clicked img2video:",shot); 
@@ -341,6 +425,7 @@ async function CreateShotInfoCardButtons(shot,parent = null)
     }
   });
 
+  // URL to IMG
   url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
   url2imgBtn.addEventListener('click', async () => {   
     try {

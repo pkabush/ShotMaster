@@ -23,19 +23,17 @@ async function editableJsonField(json_data, key, parent = null) {
   return container;
 }
 
-function createEditableLabel(text = "Editable Label",parent = null) {
-  // Create the label element
+function createEditableLabel(text = "Editable Label", parent = null,onEdit = null) {
   const label = document.createElement("span");
   label.textContent = text;
   label.className = "editable-label";
-  label.tabIndex = 0; // make focusable
+  label.tabIndex = 0;
   label.style.cursor = "text";
   label.style.padding = "4px 6px";
   label.style.borderRadius = "4px";
   label.style.display = "inline-block";
   label.style.userSelect = "text";
 
-  // Function to switch label to input
   function makeEditable() {
     if (label.dataset.editing === "true") return;
     label.dataset.editing = "true";
@@ -55,32 +53,34 @@ function createEditableLabel(text = "Editable Label",parent = null) {
     input.focus();
     input.setSelectionRange(input.value.length, input.value.length);
 
-    function save() {
-      label.textContent = input.value;
+    let done = false; // prevents double execution
+
+    function finish(action) {
+      if (done) return;
+      done = true;
+      input.removeEventListener("blur", onBlur);
+      if (action === "save") {
+        label.textContent = input.value;
+        if (onEdit) onEdit(input.value);
+      }
       label.dataset.editing = "false";
       input.replaceWith(label);
     }
-
-    function cancel() {
-      label.dataset.editing = "false";
-      input.replaceWith(label);
-    }
-
+    // When lost focus
+    function onBlur() { finish("save"); }
+    input.addEventListener("blur", onBlur);
     input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter") save();
-      else if (e.key === "Escape") cancel();
+      if (e.key === "Enter") finish("save");
+      else if (e.key === "Escape") finish("cancel");
     });
-
-    input.addEventListener("blur", save);
   }
 
-  // Attach events
   label.addEventListener("dblclick", makeEditable);
   label.addEventListener("keydown", (e) => {
     if (e.key === "Enter") makeEditable();
   });
 
-  if( parent ) parent.appendChild(label);
+  if (parent) parent.appendChild(label);
   return label;
 }
 

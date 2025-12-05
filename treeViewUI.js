@@ -49,20 +49,36 @@ async function LoadShot(shotName, shotHandle,scene){
           }
           return null
         },
-        async updateEvent() {    
+        async updateEvent(action = null) {    
           await this.onUpdateEvent();      
           // Dispatch Shot Update
-          const shotUpdateEvent = new CustomEvent("shotupdate", { detail: { shot: this } });
+          const shotUpdateEvent = new CustomEvent("shotupdate", { detail: { shot: this ,action } });
           document.dispatchEvent(shotUpdateEvent);
         },
         async addUpdateCallback(onUpdate){
           // EVENT LISTENERS
+          console.log("ADDED SHOT UPDATE LISTENER",onUpdate);
           document.addEventListener("shotupdate", (e) => {
               if (e.detail.shot == this){
                 onUpdate(e.detail);
               }
           });
         }, 
+        async onDelete(callback){          
+          /*
+          document.addEventListener("shotupdate", (e) => {
+              if (e.detail.shot == this && e.detail.action == "delete"){
+                callback(e.detail.shot);
+              }
+          });*/
+          const listener = (e) => {
+            if (e.detail.shot === this && e.detail.action === "delete") {
+              callback(e.detail.shot);
+            }
+          };
+          document.addEventListener("shotupdate", listener);
+          return listener;
+        },
         // Shot self check update
         async onUpdateEvent() {
           // Check if we have first image
@@ -83,8 +99,47 @@ async function LoadShot(shotName, shotHandle,scene){
           }
           // Do other things
         },
+        async deleteFromDisk(){
+          try {
+              // 1. Remove from scene's shots array
+              const index = this.scene.shots.indexOf(this);
+              if (index > -1) {this.scene.shots.splice(index, 1);}
+
+              // 2. Delete the shot folder from disk
+              if (this.handle) {
+                await this.scene.handle.removeEntry(this.name, { recursive: true });
+              }
+              
+              // 3. Optionally notify UI about scene update
+              //const shotDeletedEvent = new CustomEvent("shotdeleted", { detail: { shot: this } });
+              //document.dispatchEvent(shotDeletedEvent);
+              //this.updateEvent("delete");
+              document.dispatchEvent(new CustomEvent("shot_remove", { detail: { shot:this } }));
 
 
+              //this.scene.call("onCreateShot")
+              //console.log(`Shot "${this.name}" deleted successfully.`);
+
+          } catch (err) {
+              console.error(`Failed to delete shot "${this.name}":`, err);
+          }
+        },
+        async renameShot(name){
+          console.log("RENAME ",this, " to name ", name);
+          await copyDirectory(this.scene.handle,this.name,name);
+
+          const newShot = await LoadShot(name,shotHandle,this.scene)      
+          document.dispatchEvent(new CustomEvent("shot_create", { detail: { shot:newShot } }));
+          
+          // Push Shot At correct index
+          let index = this.scene.shots.findIndex(shot => shot.name.localeCompare(name) > 0);
+          if (index === -1) index = this.scene.shots.length; // If no greater name found, append at end
+          this.scene.shots.splice(index, 0, newShot);
+
+          await this.deleteFromDisk()          
+        },
+
+        // SHOT DICT END
     }   
 
   shot.initializeTasks();
@@ -155,7 +210,34 @@ async function LoadScene(sceneName, sceneHandle){
         tags_dict[categoryName][subCategoryName] =  prompt
       }
       return JSON.stringify(tags_dict,null, 2);
-    }
+    },
+    async createShot(name,data = null){
+      console.log('Generating shot:', name);
+      console.log('Shot data:',data);
+      // Create Directory
+      const shotHandle = await this.handle.getDirectoryHandle(name, { create: true } );
+      // Load Shot
+      const newShot = await LoadShot(name,shotHandle,this)      
+      //this.shots.push(newShot)
+
+      // Push Shot At correct index
+      let index = this.shots.findIndex(shot => shot.name.localeCompare(name) > 0);
+      if (index === -1) index = this.shots.length; // If no greater name found, append at end
+      this.shots.splice(index, 0, newShot);
+
+      // Set Its shot info
+      if (data) {
+        newShot.shotinfo =  { ...newShot.shotinfo,...data };      
+        await newShot.shotinfo.save()
+      }
+      //this.call("onCreateShot",{shot : newShot});
+      document.dispatchEvent(new CustomEvent("shot_create", { detail: { shot:newShot } }));
+    },
+
+
+
+
+    // SCENE DICT END
   }
 
   await scene.LoadShots()
@@ -312,7 +394,6 @@ async function loadProjectInfo(){
 
   window.projinfo = await loadBoundJson(rootDirHandle, 'projinfo.json',default_projinfo);
 }
-
 
 // LIST FOLDERS
 async function listFolders() {  

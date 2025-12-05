@@ -190,3 +190,26 @@ async function downloadURL(url, directoryHandle) {
         throw err;
     }
 }
+
+
+async function copyDirectory(parentHandle, oldName, newName) {
+  // Get the original directory
+  const oldDir = await parentHandle.getDirectoryHandle(oldName);
+
+  // Create the new directory
+  const newDir = await parentHandle.getDirectoryHandle(newName, { create: true });
+
+  // Move all entries
+  for await (const [name, entry] of oldDir.entries()) {
+    if (entry.kind === "file") {
+      const file = await entry.getFile();
+      const writable = await newDir.getFileHandle(name, { create: true });
+      const stream = await writable.createWritable();
+      await stream.write(await file.arrayBuffer());
+      await stream.close();
+    } else if (entry.kind === "directory") {
+      await copyDirectory(oldDir, name, name);          // recursive copy
+      await newDir.resolve(await oldDir.getDirectoryHandle(name)); // move recursively
+    }
+  }
+}
