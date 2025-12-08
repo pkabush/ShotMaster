@@ -175,6 +175,7 @@ async function getRelativePath(fileHandle, dirHandle, path = '') {
 
 async function downloadURL(url, directoryHandle) {
     try {
+        console.log("DOWNLOADING:",url)
         const urlObj = new URL(url);
         const fileName = urlObj.pathname.split('/').pop();
 
