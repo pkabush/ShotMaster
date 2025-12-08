@@ -12,6 +12,14 @@ import {listFolders} from  "./treeViewUI.js";
 import {artbookUI} from "./artbook.js";
 
 
+import "./styles/ShotasterAI.css"
+import "./styles/containers.css"
+import "./styles/media.css" 
+import "./styles/artbook.css"
+import "./styles/scene.css"
+
+
+
 window.rootDirHandle = null;
 window.treeViewContainer = document.getElementById('folders');
 window.contentsPanel = document.getElementById('contents');
