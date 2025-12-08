@@ -40,6 +40,7 @@ async function selectSceneFolder(scene) {
   });  
   // EXPLORER
   addSimpleButton('explore-scene-btn', 'OPEN',scene_btns_container, async () => {    
+    try {
     const response = await fetch('http://127.0.0.1:5000/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -47,8 +48,10 @@ async function selectSceneFolder(scene) {
     });
     const data = await response.json();
     console.log(data);
-
-
+    }
+    catch(e){
+      console.log(e);
+    }
   });    
 
 
