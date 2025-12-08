@@ -124,24 +124,36 @@ async function importShotDict(shot_name,shot_dict,sceneFolderHandle) {
 async function importScenesFromScript() {
     function splitScenes(text) {
     return text
-        .split(/(?=SC_\d{4})/)        // split at scene markers
-        .filter(s => /^SC_\d{4}/.test(s.trim()))   // keep only real scenes
-        .map(s => ({
-        id: s.match(/^SC_\d{4}/)[0],
-        content: s.replace(/^SC_\d{4}/, "").trim()
-        }));
+        .split(/(?=^SC_\S{1,64}\s*$)/m)
+        .filter(s => /^SC_\S{1,64}/m.test(s))
+        .map(s => {
+            const idMatch = s.match(/^SC_\S{1,64}/m);
+            return {
+                name: idMatch ? idMatch[0] : null,
+                content: s.replace(/^SC_\S{1,64}\s*/m, "").trim()
+            };
+        });
     }
 
     try {
-        script_text = await loadLocalTextFile(rootDirHandle,'script.txt');
-        scenes = splitScenes(text);
-
-        for (scene in scenes) {
-            scene_name = scenes[scene].id;
-            scene_content = scenes[scene].content;
-            sceneFolderHandle = await window.scenesDirHandle.getDirectoryHandle(scene_name, { create: true } );
-            //saveLocalTextFile(sceneFolderHandle,'script.txt',scene_content);
-            saveLocalJsonFile(sceneFolderHandle,"sceneinfo.json",{script:scene_content});
+        console.log("IMPORTING SCENES");
+        const script_text = await loadLocalTextFile(rootDirHandle,'script.txt');
+        const scenes = splitScenes(script_text);
+        for (new_scene of scenes) {
+           
+            const scene = window.scenes.find(s => s.name === new_scene.name);
+            if (scene) {
+                console.log("Found:", scene.name);
+                scene.sceneinfo.script = new_scene.content;
+                scene.sceneinfo.save()
+            } else {
+                console.log("Not found");
+                const sceneFolderHandle = await window.scenesDirHandle.getDirectoryHandle(new_scene.name, { create: true } );            
+                const _scene = await LoadScene(new_scene.name,sceneFolderHandle);
+                _scene.sceneinfo.script = new_scene.content;
+                _scene.sceneinfo.save()
+            }
+            
         }
     }
     catch (err) {

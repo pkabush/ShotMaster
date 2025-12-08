@@ -245,23 +245,23 @@ async function LoadScene(sceneName, sceneHandle){
 }
 
 async function updateTreeDict() {
-  window.treeDict = [];
+  window.scenes = [];
   window.scenesDirHandle = await rootDirHandle.getDirectoryHandle("Scenes", { create: true } );
   
   for await (const [sceneName, sceneHandle] of window.scenesDirHandle.entries()) {
     if (sceneHandle.kind === 'directory') {
       scene = await LoadScene(sceneName, sceneHandle);
-      window.treeDict.push( scene );
+      window.scenes.push( scene );
     }
   }
-  //console.log('Updated treeDict:', window.treeDict);
+  //console.log('Updated treeDict:', window.scenes);
 }
 
 async function updateTreeUI() {
     // Clear existing UI
     foldersEl.innerHTML = ''; 
     // Create Scene elements
-    for (const scene of window.treeDict) {        
+    for (const scene of window.scenes) {        
         sceneLi = await createSceneLI(scene);
         foldersEl.appendChild(sceneLi);
     }
@@ -401,7 +401,7 @@ async function listFolders() {
   await updateTreeDict();
   await updateTreeUI(); 
   await readArtbookData();
-  //console.log(window.treeDict);
+  //console.log(window.scenes);
 }
 
 // Status bar helper

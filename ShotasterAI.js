@@ -18,9 +18,11 @@ document.getElementById('pick').addEventListener('click', async () => {
 });
 
 // --- Import From Scenes from Clipboard ---
+/*
 document.getElementById('import_shots_from_clipboard_btn').addEventListener('click', async () => {
     await importShotsFromClipboard();  
 });
+*/
 
 // --- Import From Scenes from Clipboard ---
 document.getElementById('import_scenes_from_script_btn').addEventListener('click', async () => {
