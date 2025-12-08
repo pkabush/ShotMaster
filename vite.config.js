@@ -1,8 +1,11 @@
+// vite.config.js
 import { defineConfig } from 'vite'
+import path from 'path'
 
 export default defineConfig({
+  base: '/ShotMaster/',
   build: {
-    outDir: 'docs', // Vite will build here
-  },
-
+    outDir: 'docs',
+    emptyOutDir: true
+  }
 })
