@@ -1,17 +1,32 @@
-let rootDirHandle = null;
-let selectedDirHandle = null;
+import { GoogleGenAI } from "@google/genai";
+import {sortChildrenById,CreateButtonsContainer} from "./Containers.js";
+import "./fileSystemUtils.js";
+import "./indexedDB.js";
+import {createEditableKeyField,addSimpleButton,editableJsonField,createDropdown } from "./jsonEditElement.js";
+import "./kieGenerate.js";
+import "./GPT_tools.js";
+import "./folderUI.js";
+import "./Tasks.js";
+import "./ResolveUtils.js";
+import {listFolders} from  "./treeViewUI.js";
+import {artbookUI} from "./artbook.js";
+
+
+window.rootDirHandle = null;
 window.treeViewContainer = document.getElementById('folders');
-const contentsPanel = document.getElementById('contents');
+window.contentsPanel = document.getElementById('contents');
 const statusBar = document.getElementById('status-bar');
+
+
 
 // -- BUTTON CALLBACKS ---
 // --- Pick folder button ---
 document.getElementById('pick').addEventListener('click', async () => {
   try {
-    rootDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-    await window.db.savePickedFolder(rootDirHandle);
+    window.rootDirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+    await window.db.savePickedFolder(window.rootDirHandle);
     await listFolders();
-    contentsPanel.innerHTML = '';
+    window.contentsPanel.innerHTML = '';
   } catch (err) {
     console.error('Folder pick canceled or failed', err);
   }
@@ -52,7 +67,7 @@ window.addEventListener('DOMContentLoaded', async () => {
       permission = await handle.requestPermission({ mode: 'readwrite' });
     }
     if (permission === 'granted') {
-      rootDirHandle = handle;
+      window.rootDirHandle = handle;
       await listFolders();
     }
   }
@@ -74,9 +89,9 @@ async function populateRecentFolders() {
         permission = await handle.requestPermission({ mode: 'readwrite' });
       }
       if (permission === 'granted') {
-        rootDirHandle = handle;
+        window.rootDirHandle = handle;
         await listFolders();
-        contentsPanel.innerHTML = '';
+        window.contentsPanel.innerHTML = '';
       }
     });
     recentMenu.appendChild(li);
@@ -89,7 +104,7 @@ document.getElementById('open-recent').addEventListener('mouseenter', populateRe
 
 // --- open Settings ---
 document.getElementById('settings_btn').addEventListener('click', async () => {
-  contentsPanel.innerHTML = '';
+  window.contentsPanel.innerHTML = '';
 
   const container = document.createElement('div');
   await createEditableKeyField(window.userdata,"KIE_API_KEY",container)
@@ -98,16 +113,15 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   await createEditableKeyField(window.userdata,"openrouter_API_KEY",container)
 
     // Buttons container
-  buttonContainer = CreateButtonsContainer(container);  
+  const buttonContainer = CreateButtonsContainer(container);  
 
-  logProjInfoBtn = addSimpleButton('log-proj-info-btn', 'LOG ProjInfo',buttonContainer);
+  const logProjInfoBtn = addSimpleButton('log-proj-info-btn', 'LOG ProjInfo',buttonContainer);
   logProjInfoBtn.addEventListener('click', async () => { 
         console.log("PROJECT INFO:",window.projinfo);
         console.log("USERDATA:",window.userdata);
     });
 
-  downloadAhkFile = addSimpleButton('download-ahk-file', 'Download AHK',buttonContainer);
-  downloadAhkFile.addEventListener('click', async () => { 
+  addSimpleButton('download-ahk-file', 'Download AHK',buttonContainer,async () => { 
       const link = document.createElement('a');
       link.href = 'assets/MJ_SplitPaste.exe';
       link.download = 'MJ_SplitPaste.exe';    // Optional: sets default file name
@@ -119,7 +133,7 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   // Download CMD Server
   addSimpleButton('download-server-file', 'Download CMD_Server',buttonContainer, async () => { 
     // This Gets Blocked by safe browsing
-    //await downloadURL(window.location.href + 'assets/cmd_server.exe', rootDirHandle);
+    //await downloadURL(window.location.href + 'assets/cmd_server.exe', window.rootDirHandle);
 
     // This works
     const link = document.createElement('a');
@@ -146,13 +160,13 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
     window.projinfo.save();
   }).setValue(window.projinfo.gpt_model);
 
-  contentsPanel.appendChild(container);
+  window.contentsPanel.appendChild(container);
 });
 
 // --- open Artbook ---
 document.getElementById('artbook_btn').addEventListener('click', async () => {
-  contentsPanel.innerHTML = '';
-  await artbookUI.createArtbookPanel(contentsPanel);  
+  window.contentsPanel.innerHTML = '';
+  await artbookUI.createArtbookPanel(window.contentsPanel);  
 });
 
 
@@ -166,3 +180,5 @@ window.treeViewContainer.reset = async function(){
     this.innerHTML = ''; 
     for (const scene of window.scenes) { this.addScene(scene); }   
 }
+
+

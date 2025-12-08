@@ -1,16 +1,23 @@
+import {createResizableContainer ,CreateButtonsContainer,createHorizontalContainer,createCollapsibleContainer,createTabContainer } from "./Containers.js";
+import {createEditableKeyField,addSimpleButton,editableJsonField,createSpacer } from "./jsonEditElement.js";
+import {artbookUI } from "./artbook.js";
+import {createTaskContainer} from "./Tasks.js";
+
+
+
 
 // Select SHOT FOLDER
-async function selectShot(shot) {
+export async function selectShot(shot) {
 
 }
 // SELECT SCENE FOLDER
-async function selectSceneFolder(scene) {
+export async function selectSceneFolder(scene) {
   window.currentFolderHandle = scene.handle;
   document.querySelectorAll('#folders li').forEach(el => el.classList.remove('selected'));
-  contentsPanel.innerHTML = '';
+  window.contentsPanel.innerHTML = '';
 
   if (scene.ui_scenepanel){
-    contentsPanel.appendChild(scene.ui_scenepanel);
+    window.contentsPanel.appendChild(scene.ui_scenepanel);
     return;
   }
 
@@ -53,9 +60,7 @@ async function selectSceneFolder(scene) {
       console.log(e);
     }
   });    
-
-
-  
+ 
 
 
 
@@ -70,7 +75,7 @@ async function selectSceneFolder(scene) {
   //ImportShotsBtn = addSimpleButton(buttonContainer, 'import-shots-btn', 'Import Shots Clipboard');
   //ImportShotsBtn.addEventListener('click', async () => { await importShotsFromClipboard(); });
 
-  generateSplitIntoShotsPromptBtn = addSimpleButton('generate-split-into-shots-prompt-btn', 'Generate Split Prompt',buttonContainer);
+  const generateSplitIntoShotsPromptBtn = addSimpleButton('generate-split-into-shots-prompt-btn', 'Generate Split Prompt',buttonContainer);
   generateSplitIntoShotsPromptBtn.addEventListener('click', async () => { 
       const tags_string = await scene.getTagsString() 
     
@@ -82,7 +87,7 @@ async function selectSceneFolder(scene) {
       console.log("GENERATED PROMPT:\n", base_text)
     });
 
-  generateSplitIntoShotsPromptRefsBtn = addSimpleButton('generate-split-into-shots-prompt-refs-btn', 'Generate Split Prompt(with REFS)',buttonContainer);
+  const generateSplitIntoShotsPromptRefsBtn = addSimpleButton('generate-split-into-shots-prompt-refs-btn', 'Generate Split Prompt(with REFS)',buttonContainer);
   generateSplitIntoShotsPromptRefsBtn.addEventListener('click', async () => { 
     //console.log("SCENE",scene);
     //console.log("USER_DATA",window.userdata);
@@ -101,7 +106,7 @@ async function selectSceneFolder(scene) {
     console.log("GENERATED PROMPT:", base_text)
     //console.log(await scene.getTags())
 
-    role =  "You are a helpful assistant. " +
+    const role =  "You are a helpful assistant. " +
             "Always respond using ONLY valid JSON. " +
             "Do not write explanations. " +
             "Do not wrap the JSON in backticks. " +
@@ -114,7 +119,7 @@ async function selectSceneFolder(scene) {
     shots_json_field.setText(answer);    
     });
 
-  generateShotsFromJsonBtn = addSimpleButton('generate-shots-from-json-btn', 'Generate Shots from JSON',buttonContainer);
+  const generateShotsFromJsonBtn = addSimpleButton('generate-shots-from-json-btn', 'Generate Shots from JSON',buttonContainer);
   generateShotsFromJsonBtn.addEventListener('click', async () => {    
     shotdict = JSON.parse(scene.sceneinfo.shotsjson);
     for (const key in shotdict) {
@@ -136,7 +141,7 @@ async function selectSceneFolder(scene) {
   });  
 
   // Add TAG Button
-  tagsContainer = await createTagsContainer(scene,sceneSettingsContainer);
+  const tagsContainer = await createTagsContainer(scene,sceneSettingsContainer);
   await artbookUI.createAddTagButton(buttonContainer, (img) => {
     console.log(img);
     //img.createTagItem(tagsContainer);
@@ -186,14 +191,14 @@ async function selectSceneFolder(scene) {
 
   createSpacer(sceneSettingsContainer); 
 
-  const tabs1 = createTabContainer(contentsPanel);
+  const tabs1 = createTabContainer(window.contentsPanel);
   tabs1.addTab({ title: 'Scene', content: sceneSettingsContainer });
   tabs1.addTab({ title: 'Shots', content: shotPreviewStrip });
   scene.ui_scenepanel = tabs1;
   return tabs1;
 }
 
-async function createTagsContainer(scene,parent = null){
+export async function createTagsContainer(scene,parent = null){
   const container = createCollapsibleContainer("Tags",parent)
   
   container.addTag = async function(tag){
@@ -206,7 +211,7 @@ async function createTagsContainer(scene,parent = null){
   }
 
   for(const tag of scene.sceneinfo.tags){    
-    img = await artbookUI.path2img(tag);
+    const img = await artbookUI.path2img(tag);
     if (img) container.addTag(img)    
   }
 
@@ -214,7 +219,7 @@ async function createTagsContainer(scene,parent = null){
 }
 
 // Shot INFO CARD 
-async function CreateShotInfoCard(shot,parent = null) {
+export async function CreateShotInfoCard(shot,parent = null) {
   const container = document.createElement('div');
   container.classList.add('shot-info'); 
 
@@ -261,7 +266,7 @@ async function CreateShotInfoCard(shot,parent = null) {
   return container;
 }
 // Shot Preview Strip
-async function createShotPreviewStrip(scene) {  
+export async function createShotPreviewStrip(scene) {  
 
   const container = document.createElement('div');
   container.scene = scene;
@@ -350,7 +355,7 @@ async function createShotPreviewStrip(scene) {
 }
 
 // Shot Preview Icon
-async function CreateShotPreview(shot) {
+export async function CreateShotPreview(shot) {
   // Container for the shot
   const container = document.createElement("div");
   container.classList.add("shot-preview");
@@ -389,41 +394,31 @@ async function CreateShotPreview(shot) {
 
   return container;
 }
-// Simple Button
-function addSimpleButton(btn, text, parent = null, callback = null)
-{
-  const simpleBtn = document.createElement('button');
-  simpleBtn.id = btn;
-  simpleBtn.textContent = text;
-  if (parent) {parent.appendChild(simpleBtn);}
-  if (callback) {simpleBtn.addEventListener('click', callback )}; 
-  return simpleBtn;
-}
 
 // Shot Info Card Buttons
-async function CreateShotInfoCardButtons(shot,parent = null)
+export async function CreateShotInfoCardButtons(shot,parent = null)
 {
   const buttonContainer = CreateButtonsContainer(parent);
   
   // --- TEST button ---
-  testBtn = addSimpleButton('testBtn', 'Log shot', buttonContainer);
+  const testBtn = addSimpleButton('testBtn', 'Log shot', buttonContainer);
   testBtn.addEventListener('click', async () => { console.log(shot); });
 
-  updateBtn = addSimpleButton('testBtn', 'Update', buttonContainer);
+  const updateBtn = addSimpleButton('testBtn', 'Update', buttonContainer);
   updateBtn.addEventListener('click', async () => { shot.updateEvent() });
 
   // --- Shot Status button ---
-  changeShotStatusBtn = await createShotStatusButton(shot,buttonContainer);  
+  const changeShotStatusBtn = await createShotStatusButton(shot,buttonContainer);  
 
   // --- Create Resolve FCPXML button ---
-  createResolveXMLButton = addSimpleButton('create-resolve-xml-btn', 'Generate Resolve FCPXML',buttonContainer);
+  const createResolveXMLButton = addSimpleButton('create-resolve-xml-btn', 'Generate Resolve FCPXML',buttonContainer);
   createResolveXMLButton.addEventListener('click', async () => {    
       const resultsFolder = await window.currentFolderHandle.getDirectoryHandle("results", { create: false });
       await generateFCPXMLFromFolder(resultsFolder);
   });
 
   // TXT 2 Image
-  txt2ImageBtn = addSimpleButton('txt2imgBtn',"txt2img", buttonContainer);
+  const txt2ImageBtn = addSimpleButton('txt2imgBtn',"txt2img", buttonContainer);
   txt2ImageBtn.addEventListener('click', async () => {   
     console.log("Clicked txt2img:",shot); 
     try {
@@ -437,7 +432,7 @@ async function CreateShotInfoCardButtons(shot,parent = null)
   });
 
   // IMG 2 VIDEO
-  img2videoBtn = addSimpleButton('img2videoBtn',"img2video", buttonContainer);
+  const img2videoBtn = addSimpleButton('img2videoBtn',"img2video", buttonContainer);
   img2videoBtn.addEventListener('click', async () => {   
     console.log("Clicked img2video:",shot); 
     try {
@@ -460,7 +455,7 @@ async function CreateShotInfoCardButtons(shot,parent = null)
   });
 
   // URL to IMG
-  url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
+  const url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
   url2imgBtn.addEventListener('click', async () => {   
     try {
         const clipboardText = await navigator.clipboard.readText();
@@ -488,7 +483,7 @@ async function CreateShotInfoCardButtons(shot,parent = null)
   return buttonContainer
 }
 // SHOT STATUS TOGGLE
-async function createShotStatusButton(shot,parent = null)
+export async function createShotStatusButton(shot,parent = null)
 {
   const shotToggleBtn = addSimpleButton('shot-toggle-btn', 'Finished',parent);
 
@@ -505,7 +500,7 @@ async function createShotStatusButton(shot,parent = null)
 }
 
 // --- MAIN FUNCTION (NOW CLEAN) ---
-async function createMediaFolderPreview(shot, folderName, parent = null) {
+export async function createMediaFolderPreview(shot, folderName, parent = null) {
   // Main Container
   const container = await createCollapsibleContainer(folderName, parent);
   // Images container

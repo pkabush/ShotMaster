@@ -1,11 +1,15 @@
+import {loadBoundJson} from "./fileSystemUtils.js";
+import {CreateTask} from "./Tasks.js";
+import {readArtbookData} from "./artbook.js";
+import {selectSceneFolder} from "./folderUI.js";
 
 
 async function LoadShot(shotName, shotHandle,scene){
-  default_shotinfo = {
+  const default_shotinfo = {
     finished: false 
   }
-  shotinfo = await loadBoundJson(shotHandle, 'shotinfo.json',default_shotinfo);  
-  taskinfo = await loadBoundJson(shotHandle, 'tasks.json',{tasks:[]});  
+  let shotinfo = await loadBoundJson(shotHandle, 'shotinfo.json',default_shotinfo);  
+  let taskinfo = await loadBoundJson(shotHandle, 'tasks.json',{tasks:[]});  
 
   const shot = { 
         name: shotName,
@@ -154,7 +158,7 @@ async function LoadShot(shotName, shotHandle,scene){
 }
 
 async function LoadScene(sceneName, sceneHandle){
-  default_sceneinfo = {
+  const default_sceneinfo = {
     finished: false,
     description: "",
     location: "",
@@ -166,7 +170,7 @@ async function LoadScene(sceneName, sceneHandle){
     ui_scenepanel:null
   }          
 
-  sceneinfo = await loadBoundJson(sceneHandle, 'sceneinfo.json',default_sceneinfo);
+  let sceneinfo = await loadBoundJson(sceneHandle, 'sceneinfo.json',default_sceneinfo);
 
   const scene = {
     name: sceneName ,
@@ -302,11 +306,11 @@ async function LoadScene(sceneName, sceneHandle){
 
 async function updateTreeDict() {
   window.scenes = [];
-  window.scenesDirHandle = await rootDirHandle.getDirectoryHandle("Scenes", { create: true } );
+  window.scenesDirHandle = await window.rootDirHandle.getDirectoryHandle("Scenes", { create: true } );
   
   for await (const [sceneName, sceneHandle] of window.scenesDirHandle.entries()) {
     if (sceneHandle.kind === 'directory') {
-      scene = await LoadScene(sceneName, sceneHandle);
+      let scene = await LoadScene(sceneName, sceneHandle);
       window.scenes.push( scene );
     }
   }
@@ -356,7 +360,7 @@ async function createShotElements(scene) {
 }
 
 async function loadProjectInfo(){
-  default_projinfo = {
+  const default_projinfo = {
     split_shot_prompt: `
 разбей эту сцену из моего сценария на шоты, сгенерируй промпты для нейросети для генерации видео и предоставь в виде json, в ответе предоставь толкьо json в следующем формате:
 {
@@ -378,11 +382,11 @@ async function loadProjectInfo(){
   gpt_model:"gpt-4o-mini",
   }          
 
-  window.projinfo = await loadBoundJson(rootDirHandle, 'projinfo.json',default_projinfo);
+  window.projinfo = await loadBoundJson(window.rootDirHandle, 'projinfo.json',default_projinfo);
 }
 
 // LIST FOLDERS
-async function listFolders() {  
+export async function listFolders() {  
   await loadProjectInfo();
   await updateTreeDict();
   await window.treeViewContainer.reset()

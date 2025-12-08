@@ -1,10 +1,10 @@
 
 // BOUND JSON
-async function loadBoundJson(handle,filename,defaultValue={}) {
-    fileHandle = await handle.getFileHandle(filename, { create: true });
-    file = await fileHandle.getFile();
-    text = await file.text() || "{}";      
-    data = JSON.parse(text);
+export async function loadBoundJson(handle,filename,defaultValue={}) {
+    const fileHandle = await handle.getFileHandle(filename, { create: true });
+    const file = await fileHandle.getFile();
+    const text = await file.text() || "{}";      
+    let data = JSON.parse(text);
     data = { ...defaultValue, ...data };
     data.____handle = fileHandle; // bind handle
 
@@ -137,7 +137,7 @@ async function importScenesFromScript() {
 
     try {
         console.log("IMPORTING SCENES");
-        const script_text = await loadLocalTextFile(rootDirHandle,'script.txt');
+        const script_text = await loadLocalTextFile(window.rootDirHandle,'script.txt');
         const scenes = splitScenes(script_text);
         for (new_scene of scenes) {
            

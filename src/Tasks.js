@@ -1,7 +1,8 @@
+import {createCollapsibleContainer} from "./Containers";
 
 
 // Task Container
-async function createTaskContainer(shot,parent = null){
+export async function createTaskContainer(shot,parent = null){
   const container = createCollapsibleContainer("tasks",parent);
 
   container.addTask = function(task){
@@ -88,8 +89,8 @@ const EnumShotStatus = {
   finished : "finished",
 }
 
-function CreateTask(shot) {
-  task = {
+export function CreateTask(shot) {
+  let task = {
     //example_field : "update",    
     // Functions 
     resultUrls : [],

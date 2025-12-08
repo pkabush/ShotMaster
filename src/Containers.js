@@ -1,4 +1,4 @@
-function createTabContainer(parent = null) {
+export function createTabContainer(parent = null) {
     const container = document.createElement('div');
     container.classList.add('tab-container');
 
@@ -66,7 +66,7 @@ function createTabContainer(parent = null) {
     return container;
 }
 
-function createResizableContainer(parent = null) {
+export function createResizableContainer(parent = null) {
   const container = document.createElement('div');
   container.id = "ShotPreviewsContainer";
 
@@ -104,14 +104,14 @@ function createResizableContainer(parent = null) {
   return { appendChild, container };
 }
 
-function createHorizontalContainer(parent = null) {
+export function createHorizontalContainer(parent = null) {
   const scrollWrapper = document.createElement('div');
   scrollWrapper.classList.add('horizontal-container');  // add CSS class
   if (parent) parent.appendChild(scrollWrapper);
   return scrollWrapper;
 }
 
-function createCollapsibleContainer(name, parent = null) {
+export function createCollapsibleContainer(name, parent = null) {
     // Create main container
     //console.log("collapsible container:",parent);
     const container = document.createElement('div');
@@ -157,15 +157,16 @@ function createCollapsibleContainer(name, parent = null) {
     return container;
 }
 
-function CreateButtonsContainer(parent = null) {
+export function CreateButtonsContainer(parent = null) {
   const container = document.createElement('div');
   container.classList.add('buttons-container'); // CSS handles all styling
   if (parent) parent.appendChild(container);
   return container;
 }
 
-function sortChildrenById(container) {
+export function sortChildrenById(container) {
   const items = [...container.children];
   items.sort((a, b) => a.id.localeCompare(b.id));
   items.forEach(item => container.appendChild(item));
 }
+

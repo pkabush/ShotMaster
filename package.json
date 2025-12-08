@@ -1,0 +1,26 @@
+{
+  "name": "shotmaster",
+  "version": "1.0.0",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "vite build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pkabush/ShotMaster.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/pkabush/ShotMaster/issues"
+  },
+  "homepage": "https://github.com/pkabush/ShotMaster#readme",
+  "description": "",
+  "devDependencies": {
+    "vite": "^7.2.7"
+  },
+  "dependencies": {
+    "@google/genai": "^1.31.0"
+  }
+}

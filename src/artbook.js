@@ -1,18 +1,20 @@
+import {loadBoundJson} from "./fileSystemUtils.js";
+import {createTabContainer,CreateButtonsContainer} from "./Containers.js";
+import {editableJsonField,addSimpleButton} from "./jsonEditElement.js";
 
-
-async function readArtbookData(){
+export async function readArtbookData(){
     window.artbook = [];
-    window.artbookDirHandle = await rootDirHandle.getDirectoryHandle("REFS", { create: true } );
+    window.artbookDirHandle = await window.rootDirHandle.getDirectoryHandle("REFS", { create: true } );
 
     for await (const [artTypeName, artTypeHandle] of window.artbookDirHandle.entries()) {
         if (artTypeHandle.kind === 'directory') {
-            artTypeData = await LoadArtTypeFolder(artTypeName, artTypeHandle);
-        window.artbook.push( artTypeData );
+            let artTypeData = await LoadArtTypeFolder(artTypeName, artTypeHandle);
+            window.artbook.push( artTypeData );
         }
     }
 }
 
-async function LoadArtTypeFolder(artTypeName, artTypeHandle){
+export async function LoadArtTypeFolder(artTypeName, artTypeHandle){
   const artTypeData = {
     name: artTypeName ,
     handle: artTypeHandle, 
@@ -32,7 +34,7 @@ async function LoadArtTypeFolder(artTypeName, artTypeHandle){
   return artTypeData
 }
 
-async function LoadArtItem(itemName, itemHandle,itemType){
+export async function LoadArtItem(itemName, itemHandle,itemType){
   const artItem = { 
         name: itemName,
         handle: itemHandle, 
@@ -128,15 +130,15 @@ async function LoadArtItem(itemName, itemHandle,itemType){
                             panel.appendChild(img);        
                             
                             // Buttons container
-                            buttonContainer = CreateButtonsContainer(panel);                            
+                            const buttonContainer = CreateButtonsContainer(panel);                            
                             // Prompt field
                             const img_prompt_field = await editableJsonField(this.data, "prompt", panel);
                             // Buttons
-                            LOG_btn = addSimpleButton('img_log_btn', 'LOG',buttonContainer);
+                            const LOG_btn = addSimpleButton('img_log_btn', 'LOG',buttonContainer);
                             LOG_btn.addEventListener('click', async () => { 
                                     console.log("LOG:",this);
                                 });
-                            GPT_DescribeBtn = addSimpleButton('gpt-describe-btn', 'GPT Describe',buttonContainer);
+                            const GPT_DescribeBtn = addSimpleButton('gpt-describe-btn', 'GPT Describe',buttonContainer);
                             GPT_DescribeBtn.addEventListener('click', async () => { 
                                     console.log("LOG:",this);
 
@@ -171,7 +173,7 @@ async function LoadArtItem(itemName, itemHandle,itemType){
 }
 
 
-artbookUI = {
+export const artbookUI = {
     async createArtbookPanel(parent = null){
         const container = document.createElement('div');
 

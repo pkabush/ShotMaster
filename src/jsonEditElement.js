@@ -1,11 +1,13 @@
+import {sortChildrenById,createCollapsibleContainer} from "./Containers.js";
 
-async function editableJsonField(json_data, key, parent = null) { 
+export async function editableJsonField(json_data, key, parent = null) { 
   //console.log("json field",parent);
   
   const container = await createCollapsibleContainer(key, parent);
   const tex_area = await createResizableTextArea(json_data[key], 1, container, async (newvalue) => { 
     json_data[key] = newvalue; 
-    saveBoundJson(json_data); 
+    json_data.save();
+    //saveBoundJson(json_data); 
   });
 
   container.setText = async function(text) {
@@ -23,7 +25,7 @@ async function editableJsonField(json_data, key, parent = null) {
   return container;
 }
 
-function createEditableLabel(text = "Editable Label", parent = null,onEdit = null) {
+export function createEditableLabel(text = "Editable Label", parent = null,onEdit = null) {
   const label = document.createElement("span");
   label.textContent = text;
   label.className = "editable-label";
@@ -84,7 +86,7 @@ function createEditableLabel(text = "Editable Label", parent = null,onEdit = nul
   return label;
 }
 
-async function createResizableTextArea( text = '', rows = 1, parent = null, onChangeCallback = null) {
+export async function createResizableTextArea( text = '', rows = 1, parent = null, onChangeCallback = null) {
   const textArea = document.createElement('textarea');
   textArea.id = `prompt-area`;
   textArea.placeholder = 'Enter your prompt here...';
@@ -119,7 +121,7 @@ async function createResizableTextArea( text = '', rows = 1, parent = null, onCh
   return textArea;
 }
 
-async function createEditableKeyField(data, key, parent = null) {
+export async function createEditableKeyField(data, key, parent = null) {
   console.log(data)
   const container = document.createElement("div");
   container.className = "editable-field"; // use CSS class
@@ -149,14 +151,14 @@ async function createEditableKeyField(data, key, parent = null) {
   return container;
 }
 
-async function createSpacer(parent = null,size = 500) {
+export async function createSpacer(parent = null,size = 500) {
   const spacer = document.createElement('div');
   spacer.style.height = `${size}px`;  
   if (parent) parent.appendChild(spacer);
 }
 
 
-function createDropdown(labelText,options,parent, onChange = null) {
+export function createDropdown(labelText,options,parent, onChange = null) {
     // Create a container div
     const container = document.createElement("div");
     container.className = "editable-field"; 
@@ -194,4 +196,15 @@ function createDropdown(labelText,options,parent, onChange = null) {
     container.appendChild(select);
     if (parent) parent.appendChild(container);
     return container;
+}
+
+// Simple Button
+export function addSimpleButton(btn, text, parent = null, callback = null)
+{
+  const simpleBtn = document.createElement('button');
+  simpleBtn.id = btn;
+  simpleBtn.textContent = text;
+  if (parent) {parent.appendChild(simpleBtn);}
+  if (callback) {simpleBtn.addEventListener('click', callback )}; 
+  return simpleBtn;
 }
