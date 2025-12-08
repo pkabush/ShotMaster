@@ -119,7 +119,7 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   addSimpleButton('download-server-file', 'Download CMD_Server',buttonContainer, async () => { 
     //const currentURL = window.location.href;    
     //console.log(currentURL);
-    await downloadURL(window.location.href + 'assets/cmd_server.exe', window.rootDirHandle);
+    await downloadURL(window.location.href + 'assets/cmd_server.exe', rootDirHandle);
   });
 
 
