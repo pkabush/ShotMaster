@@ -116,12 +116,19 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
       document.body.removeChild(link); // Clean up
   });
 
+  // Download CMD Server
   addSimpleButton('download-server-file', 'Download CMD_Server',buttonContainer, async () => { 
-    //const currentURL = window.location.href;    
-    //console.log(currentURL);
-    await downloadURL(window.location.href + 'assets/cmd_server.exe', rootDirHandle);
-  });
+    // This Gets Blocked by safe browsing
+    //await downloadURL(window.location.href + 'assets/cmd_server.exe', rootDirHandle);
 
+    // This works
+    const link = document.createElement('a');
+    link.href = 'assets/cmd_server.exe';
+    link.download = 'cmd_server.exe';    // Optional: sets default file name
+    document.body.appendChild(link); // Append temporarily
+    link.click();                    // Trigger download
+    document.body.removeChild(link); // Clean up
+  });
 
   await editableJsonField(window.projinfo, "split_shot_prompt", container);
   await editableJsonField(window.projinfo, "describe_prompt", container);
