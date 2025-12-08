@@ -1,6 +1,6 @@
 let rootDirHandle = null;
 let selectedDirHandle = null;
-const foldersEl = document.getElementById('folders');
+window.treeViewContainer = document.getElementById('folders');
 const contentsPanel = document.getElementById('contents');
 const statusBar = document.getElementById('status-bar');
 
@@ -24,10 +24,21 @@ document.getElementById('import_shots_from_clipboard_btn').addEventListener('cli
 });
 */
 
-// --- Import From Scenes from Clipboard ---
+// --- ADD SCENE ---
+document.getElementById('add_scene_btn').addEventListener('click', async () => {
+  const scene_name = prompt("SCENE NAME:", "SC_0010");
+  if (scene_name) { 
+    const sceneFolderHandle = await window.scenesDirHandle.getDirectoryHandle(scene_name, { create: true } );            
+    const scene = await LoadScene(scene_name,sceneFolderHandle);
+    window.treeViewContainer.addScene(scene);
+  }
+});
+
 document.getElementById('import_scenes_from_script_btn').addEventListener('click', async () => {
     await importScenesFromScript();  
 });
+
+
 
 // --- Page Loaded ---
 window.addEventListener('DOMContentLoaded', async () => {
@@ -46,7 +57,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     }
   }
 });
-
 
 const recentMenu = document.getElementById('recent-folders-menu');
 // Load recent folders from IndexedDB and populate submenu
@@ -74,8 +84,6 @@ async function populateRecentFolders() {
 }
 // Populate on hover
 document.getElementById('open-recent').addEventListener('mouseenter', populateRecentFolders);
-
-
 
 
 
@@ -108,6 +116,13 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
       document.body.removeChild(link); // Clean up
   });
 
+  addSimpleButton('download-server-file', 'Download CMD_Server',buttonContainer, async () => { 
+    //const currentURL = window.location.href;    
+    //console.log(currentURL);
+    await downloadURL(window.location.href + 'assets/cmd_server.exe', window.rootDirHandle);
+  });
+
+
   await editableJsonField(window.projinfo, "split_shot_prompt", container);
   await editableJsonField(window.projinfo, "describe_prompt", container);
   await editableJsonField(window.projinfo, "describe_env_prompt", container);  
@@ -127,9 +142,20 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   contentsPanel.appendChild(container);
 });
 
-
 // --- open Artbook ---
 document.getElementById('artbook_btn').addEventListener('click', async () => {
   contentsPanel.innerHTML = '';
   await artbookUI.createArtbookPanel(contentsPanel);  
 });
+
+
+// TREE VIEW CONTAINER
+window.treeViewContainer.addScene = async function(scene){
+    const sceneLi = await scene.getTreeItem();
+    this.appendChild(sceneLi);
+    sortChildrenById(this);
+}
+window.treeViewContainer.reset = async function(){
+    this.innerHTML = ''; 
+    for (const scene of window.scenes) { this.addScene(scene); }   
+}

@@ -9,6 +9,11 @@ async function selectSceneFolder(scene) {
   document.querySelectorAll('#folders li').forEach(el => el.classList.remove('selected'));
   contentsPanel.innerHTML = '';
 
+  if (scene.ui_scenepanel){
+    contentsPanel.appendChild(scene.ui_scenepanel);
+    return;
+  }
+
   //dispatch scene selected event
   const selectSceneEvent = new CustomEvent("selectscene", { detail: { } });
   document.dispatchEvent(selectSceneEvent);
@@ -25,13 +30,36 @@ async function selectSceneFolder(scene) {
   title.classList.add('shot-info-title');  // optional CSS class
   sceneSettingsContainer.appendChild(title);
 
+  // MAIN BUTTONS
+  const scene_btns_container = CreateButtonsContainer(sceneSettingsContainer);
+  // LOG
+  addSimpleButton('log-scene', 'LOG',scene_btns_container, async () => { console.log("SCENE:",scene) });   
+  // DELETE
+  addSimpleButton('delete-scene-btn', 'DELETE',scene_btns_container, async () => {    
+    scene.delete();
+  });  
+  // EXPLORER
+  addSimpleButton('explore-scene-btn', 'OPEN',scene_btns_container, async () => {    
+    const response = await fetch('http://127.0.0.1:5000/run', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ "command":["explorer","."] })
+    });
+    const data = await response.json();
+    console.log(data);
+
+
+  });    
+
+
+  
+
+
 
   //await createPromptUI(scene.handle, "script",parent = sceneSettingsContainer);
   await editableJsonField(scene.sceneinfo, "script", sceneSettingsContainer);
 
-  buttonContainer = CreateButtonsContainer(parent = sceneSettingsContainer);
-  //SplitIntoShotsBtn = addSimpleButton('split-into-shots-btn', 'Split Into Shots',buttonContainer);
-
+  const buttonContainer = CreateButtonsContainer(parent = sceneSettingsContainer);
 
   // Scene SHOTS json Field
   const shots_json_field = await editableJsonField(scene.sceneinfo, "shotsjson", sceneSettingsContainer);
@@ -80,8 +108,7 @@ async function selectSceneFolder(scene) {
     // this one uploads images as tags, but we only use prompts now
     //const answer = await GPT.txt2txt(base_text, await scene.getTags());
     const answer = await GPT.txt2txt(base_text,role);
-    shots_json_field.setText(answer);
-    
+    shots_json_field.setText(answer);    
     });
 
   generateShotsFromJsonBtn = addSimpleButton('generate-shots-from-json-btn', 'Generate Shots from JSON',buttonContainer);
@@ -115,10 +142,6 @@ async function selectSceneFolder(scene) {
   });
   
 
-  // SCENE LOG
-  addSimpleButton('log-scene', 'LOG',buttonContainer, async () => {    
-    console.log("SCENE:",scene)  
-  }); 
 
   // SHOTS LOG
   addSimpleButton('log-tags-btn', 'LOG TAGS',buttonContainer, async () => { 
@@ -162,9 +185,9 @@ async function selectSceneFolder(scene) {
 
   const tabs1 = createTabContainer(contentsPanel);
   tabs1.addTab({ title: 'Scene', content: sceneSettingsContainer });
-  tabs1.addTab({ title: 'Shots', content: shotPreviewStrip }); 
-
-
+  tabs1.addTab({ title: 'Shots', content: shotPreviewStrip });
+  scene.ui_scenepanel = tabs1;
+  return tabs1;
 }
 
 async function createTagsContainer(scene,parent = null){
@@ -472,7 +495,7 @@ async function createShotStatusButton(shot,parent = null)
 
   updateShotStatusButton(shotToggleBtn);
   shotToggleBtn.addEventListener('click', () => {
-    updateShotStatus( shot, !shot.shotinfo.finished);
+    shot.setStatus( !shot.shotinfo.finished);
     updateShotStatusButton(shotToggleBtn);
   });
   return shotToggleBtn;

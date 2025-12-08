@@ -1,5 +1,3 @@
-// Event bus to notify shot status updates
-//const updateShotStatusBus = new EventTarget();
 
 
 async function LoadShot(shotName, shotHandle,scene){
@@ -138,6 +136,15 @@ async function LoadShot(shotName, shotHandle,scene){
 
           await this.deleteFromDisk()          
         },
+        async setStatus(status) {
+            if (status != this.shotinfo.finished){
+                this.shotinfo.finished  = status;
+                // Not realy cute, might fix later
+                this.scene.ui_treeitem.update();
+                this.shotinfo.save();                
+            }
+        }
+
 
         // SHOT DICT END
     }   
@@ -154,6 +161,9 @@ async function LoadScene(sceneName, sceneHandle){
     shotsjson: "",
     script:"",
     tags: [],
+    // UI
+    ui_treeitem:null,
+    ui_scenepanel:null
   }          
 
   sceneinfo = await loadBoundJson(sceneHandle, 'sceneinfo.json',default_sceneinfo);
@@ -233,9 +243,55 @@ async function LoadScene(sceneName, sceneHandle){
       //this.call("onCreateShot",{shot : newShot});
       document.dispatchEvent(new CustomEvent("shot_create", { detail: { shot:newShot } }));
     },
+    getFinishedShotCount() {
+        return this.shots.filter(s => s.shotinfo.finished).length;
+    },
+    getTotalShotCount() {
+        return this.shots.length;
+    },    
+    // Delete
+    async delete() {
+      if (confirm(`Are you sure you want to delete scene ${this.name}?`)) {
+        const index = window.scenes.indexOf(this);
+        if (index > -1) {window.scenes.splice(index, 1);}
+        
+        if (this.handle) { await window.scenesDirHandle.removeEntry(this.name, { recursive: true }); }
+        this?.ui_treeitem?.remove?.();
+      } 
+    },
 
 
+    // UI FUNCTIONS
+    // Create Tree Item
+    async getTreeItem() { 
+        if (this.ui_treeitem) return this.ui_treeitem;
 
+        // ---- Build scene <li> ----
+        this.ui_treeitem = document.createElement('li');
+        this.ui_treeitem.id = `treeview-scene-${scene.name}`
+        this.ui_treeitem.classList.add('scene-li');
+        // Header container (scene name + counter)
+        const headerDiv = document.createElement('div');
+        headerDiv.classList.add('scene-header');
+        this.ui_treeitem.appendChild(headerDiv);    
+        // Name
+        const sceneNameSpan = document.createElement('span');
+        sceneNameSpan.textContent = scene.name;
+        headerDiv.appendChild(sceneNameSpan);
+        // Shot Counter
+        const counterSpan = document.createElement('span');
+        counterSpan.classList.add('scene-counter');
+        headerDiv.appendChild(counterSpan);
+        // On Click
+        headerDiv.addEventListener('click', () => { selectSceneFolder(scene); });
+
+        // Update UI Function
+        this.ui_treeitem.update = function(){
+            counterSpan.textContent = `${scene.getFinishedShotCount()}/${scene.getTotalShotCount()}`;
+        }
+        this.ui_treeitem.update();
+        return this.ui_treeitem;
+      }, 
 
     // SCENE DICT END
   }
@@ -257,15 +313,6 @@ async function updateTreeDict() {
   //console.log('Updated treeDict:', window.scenes);
 }
 
-async function updateTreeUI() {
-    // Clear existing UI
-    foldersEl.innerHTML = ''; 
-    // Create Scene elements
-    for (const scene of window.scenes) {        
-        sceneLi = await createSceneLI(scene);
-        foldersEl.appendChild(sceneLi);
-    }
-}
 
 async function createShotLI(shot) {
     // ---- Build shot <li> ----
@@ -308,67 +355,6 @@ async function createShotElements(scene) {
     return shotElements;
 }
 
-function getFinishedShotCount(scene) {
-    return scene.shots.filter(s => s.shotinfo.finished).length;
-}
-
-function getTotalShotCount(scene) {
-    return scene.shots.length;
-}
-
-async function createSceneLI(scene) {
-    shotElements = await createShotElements(scene);
-    
-    // ---- Build scene <li> ----
-    const sceneLi = document.createElement('li');
-    sceneLi.style.cursor = 'pointer';
-    sceneLi.style.display = 'flex';
-    sceneLi.style.flexDirection = 'column'; // stack children vertically
-    sceneLi.style.alignItems = 'stretch';
-
-    // Header container (scene name + counter)
-    const headerDiv = document.createElement('div');
-    headerDiv.style.display = 'flex';
-    headerDiv.style.justifyContent = 'space-between';
-    headerDiv.style.alignItems = 'center';
-
-    const sceneNameSpan = document.createElement('span');
-    sceneNameSpan.textContent = scene.name;
-    headerDiv.appendChild(sceneNameSpan);
-
-    const counterSpan = document.createElement('span');
-    counterSpan.style.color = 'grey';
-    headerDiv.appendChild(counterSpan);
-
-    // Subfolders container
-    const subfolderUl = document.createElement('ul');
-    subfolderUl.style.display = 'none'; // Initially collapsed
-    //console.log("shotElements:", shotElements);    
-    shotElements.forEach(el => subfolderUl.appendChild(el));
-
-    // Toggle show/hide on scene click + call selection
-    headerDiv.addEventListener('click', () => {
-        selectSceneFolder(scene);
-        // Disabled showing shots - might return later
-        //const isCollapsed = subfolderUl.style.display === 'none';
-        //subfolderUl.style.display = isCollapsed ? 'block' : 'none';
-    });
-
-    // Append header and shot list
-    sceneLi.appendChild(headerDiv);    
-    sceneLi.appendChild(subfolderUl);
-    scene.liElement = sceneLi;
-
-    scene.updateUI = function(){
-        finishedShots = getFinishedShotCount(scene);
-        totalShots = getTotalShotCount(scene);  
-        counterSpan.textContent = `${finishedShots}/${totalShots}`;
-    }
-    scene.updateUI();
-
-    return sceneLi;
-}
-
 async function loadProjectInfo(){
   default_projinfo = {
     split_shot_prompt: `
@@ -399,9 +385,8 @@ async function loadProjectInfo(){
 async function listFolders() {  
   await loadProjectInfo();
   await updateTreeDict();
-  await updateTreeUI(); 
+  await window.treeViewContainer.reset()
   await readArtbookData();
-  //console.log(window.scenes);
 }
 
 // Status bar helper
@@ -413,14 +398,6 @@ function updateStatus(message) {
 }
 
 window.updateStatus = updateStatus;
-
-async function updateShotStatus(shot,status) {
-    if (status != shot.shotinfo.finished){
-        shot.shotinfo.finished  = status;
-        shot.updateUI();        
-        saveBoundJson(shot.shotinfo);
-    }
-}
 
 
 

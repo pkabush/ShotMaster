@@ -21,7 +21,7 @@ function createTabContainer(parent = null) {
         });
     }
 
-    function addTab({ title, content }) {
+    container.addTab = function({ title, content }) {
         const id = 'tab-' + (tabs.length + 1);
 
         const button = document.createElement('button');
@@ -63,7 +63,7 @@ function createTabContainer(parent = null) {
     }
 
     if (parent) parent.appendChild(container);
-    return { addTab, container };
+    return container;
 }
 
 function createResizableContainer(parent = null) {
@@ -162,4 +162,10 @@ function CreateButtonsContainer(parent = null) {
   container.classList.add('buttons-container'); // CSS handles all styling
   if (parent) parent.appendChild(container);
   return container;
+}
+
+function sortChildrenById(container) {
+  const items = [...container.children];
+  items.sort((a, b) => a.id.localeCompare(b.id));
+  items.forEach(item => container.appendChild(item));
 }
