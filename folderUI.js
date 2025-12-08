@@ -251,13 +251,17 @@ async function createShotPreviewStrip(scene) {
       if (value) { await container.scene.createShot(value); }
     });
 
+    this.shotInfoContainer = document.createElement("div");
+    this.shotInfoContainer.classList.add("shot-info-container");
+    this.appendChild(this.shotInfoContainer);
+
     //add Spacer
-    //createSpacer(this);
+    createSpacer(this);
   }
   container.addShot = async function(shot){            
       const shotElement = await CreateShotPreview(shot);
       this.shotsStrip.appendChild(shotElement);
-      const shot_info = await CreateShotInfoCard(shot, parent = this);
+      const shot_info = await CreateShotInfoCard(shot, parent = this.shotInfoContainer);
       shot_info.style.display = 'none';
 
       // --- Add click event to show corresponding info ---
@@ -267,12 +271,17 @@ async function createShotPreviewStrip(scene) {
       }); 
 
       container.shots.push({shot,shotElement,shot_info});
+      container.orderShots();
   }
   container.addSceneShots = async function(){
     for (const shot of this.scene.shots) {
       this.addShot(shot)
     }    
   }
+  container.orderShots = function() {
+    this.shots.sort((a, b) => a.shot.name.localeCompare(b.shot.name));
+    this.shots.forEach(entry => { this.shotsStrip.appendChild(entry.shotElement); });
+  };
 
 
   // CALLBACKS
@@ -287,6 +296,7 @@ async function createShotPreviewStrip(scene) {
     if (scene == container.scene) container.addShot(e.detail.shot);
   };
   document.addEventListener("shot_create", container.onShotCreate);
+
   // ON SHOT REMOVED
   container.onShotRemove = (e) => {
     if (container.isConnected == false)
