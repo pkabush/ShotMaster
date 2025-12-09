@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import {sortChildrenById,CreateButtonsContainer} from "./Containers.js";
-import "./fileSystemUtils.js";
+import {importScenesFromScript} from "./fileSystemUtils.js";
 import "./indexedDB.js";
 import {createEditableKeyField,addSimpleButton,editableJsonField,createDropdown } from "./jsonEditElement.js";
 import "./kieGenerate.js";
@@ -8,7 +8,7 @@ import "./GPT_tools.js";
 import "./folderUI.js";
 import "./Tasks.js";
 import "./ResolveUtils.js";
-import {listFolders} from  "./treeViewUI.js";
+import {listFolders,LoadScene} from  "./treeViewUI.js";
 import {artbookUI} from "./artbook.js";
 
 

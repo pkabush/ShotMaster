@@ -14,7 +14,8 @@ export async function editableJsonField(json_data, key, parent = null) {
     tex_area.value = text;
     tex_area.autoResize();
     json_data[key] = text; 
-    saveBoundJson(json_data); 
+    json_data.save();
+    //saveBoundJson(json_data); 
   }
 
   container.onShown = function(){

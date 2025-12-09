@@ -1,11 +1,7 @@
-
-
-
-
-
+import {fileToBase64} from "./fileSystemUtils";
 
 // KIE Post Task
-async function postKieTask(url,payload){
+export async function postKieTask(url,payload){
   console.log("postKieTask",url,payload);
   const options = {
     method: 'POST',
@@ -27,7 +23,7 @@ async function postKieTask(url,payload){
 }
 
 // KIE_txt2Img
-async function kieGenerate_txt2img(prompt){
+export async function kieGenerate_txt2img(prompt){
   console.log("kieGenerate_txt2img",prompt)
   const apiUrl = 'https://api.kie.ai/api/v1/gpt4o-image'
   const url = apiUrl + '/generate';
@@ -57,7 +53,7 @@ async function kieGenerate_txt2img(prompt){
 }
 
 // KIE Runway Img2Vide - REWRITE to use Post task?
-async function kieGenerate_RunwayImg2Video(prompt, initImageUrl){
+export async function kieGenerate_RunwayImg2Video(prompt, initImageUrl){
   const apiUrl = 'https://api.kie.ai/api/v1/runway';  
   const url = apiUrl + '/generate';
   const payload = {
@@ -87,8 +83,8 @@ async function kieGenerate_RunwayImg2Video(prompt, initImageUrl){
 }
 
 // Upload File - REWRITE to use Post task?
-async function kieUploadFile(img_fileHandle) {
-  img_data = await fileToBase64(img_fileHandle);
+export async function kieUploadFile(img_fileHandle) {
+  const img_data = await fileToBase64(img_fileHandle);
   console.log('Uploading image to KIE.ai:', img_data);
 
   const url = 'https://kieai.redpandaai.co/api/file-base64-upload';
@@ -113,29 +109,8 @@ async function kieUploadFile(img_fileHandle) {
   }
 }
 
-// File2Base64
-async function fileToBase64(fileHandle) {
-  const file = await fileHandle.getFile();
-  const arrayBuffer = await file.arrayBuffer();
-
-  // Convert bytes → Base64
-  let binary = "";
-  const bytes = new Uint8Array(arrayBuffer);
-  const len = bytes.byteLength;
-
-  for (let i = 0; i < len; i++) {
-    binary += String.fromCharCode(bytes[i]);
-  }
-
-  const base64 = btoa(binary);
-  return {
-    dataUrl: `data:${file.type};base64,${base64}`,
-    rawBase64: base64
-  };
-}
-
 // CHECK RESULTS
-async function checkTaskResults(task) {
+export async function checkTaskResults(task) {
   const url = task.resultsUrl;
 
   const options = { 

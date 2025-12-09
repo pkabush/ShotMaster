@@ -1,6 +1,8 @@
 import {loadBoundJson} from "./fileSystemUtils.js";
 import {createTabContainer,CreateButtonsContainer} from "./Containers.js";
 import {editableJsonField,addSimpleButton} from "./jsonEditElement.js";
+import {GPT,OpenRouter} from "./GPT_tools.js";
+
 
 export async function readArtbookData(){
     window.artbook = [];
@@ -142,7 +144,7 @@ export async function LoadArtItem(itemName, itemHandle,itemType){
                             GPT_DescribeBtn.addEventListener('click', async () => { 
                                     console.log("LOG:",this);
 
-                                    base_text = `${window.projinfo.describe_prompt}`;
+                                    const base_text = `${window.projinfo.describe_prompt}`;
 
                                     console.log(base_text);
                                     const answer = await GPT.txt2txt(base_text,undefined, [this]);
@@ -152,7 +154,7 @@ export async function LoadArtItem(itemName, itemHandle,itemType){
                             addSimpleButton('gpt-describe-env-btn', 'GPT ENV Describe',buttonContainer,async () => { 
                                     console.log("LOG:",this);
 
-                                    base_text = `${window.projinfo.describe_env_prompt}`;
+                                    const base_text = `${window.projinfo.describe_env_prompt}`;
 
                                     console.log(base_text);
                                     const answer = await GPT.txt2txt(base_text,undefined, [this]);

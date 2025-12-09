@@ -2,9 +2,9 @@ import {createResizableContainer ,CreateButtonsContainer,createHorizontalContain
 import {createEditableKeyField,addSimpleButton,editableJsonField,createSpacer } from "./jsonEditElement.js";
 import {artbookUI } from "./artbook.js";
 import {createTaskContainer} from "./Tasks.js";
-
-
-
+import {GPT,OpenRouter} from "./GPT_tools.js";
+import {kieGenerate_txt2img,postKieTask,kieGenerate_RunwayImg2Video,kieUploadFile,checkTaskResults} from "./kieGenerate.js"
+import { downloadURL } from "./fileSystemUtils.js";
 
 // Select SHOT FOLDER
 export async function selectShot(shot) {
@@ -79,12 +79,12 @@ export async function selectSceneFolder(scene) {
   generateSplitIntoShotsPromptBtn.addEventListener('click', async () => { 
       const tags_string = await scene.getTagsString() 
     
-      base_text = `${window.projinfo.split_shot_prompt} \n      
+      const base_text = `${window.projinfo.split_shot_prompt} \n      
       ${tags_string} \n
       ${scene.sceneinfo.script}
       `;
-      navigator.clipboard.writeText(base_text)
-      console.log("GENERATED PROMPT:\n", base_text)
+      navigator.clipboard.writeText(base_text);
+      console.log("GENERATED PROMPT:\n", base_text);
     });
 
   const generateSplitIntoShotsPromptRefsBtn = addSimpleButton('generate-split-into-shots-prompt-refs-btn', 'Generate Split Prompt(with REFS)',buttonContainer);
@@ -93,7 +93,7 @@ export async function selectSceneFolder(scene) {
     //console.log("USER_DATA",window.userdata);
     const tags_string = await scene.getTagsString() 
 
-    base_text = `${window.projinfo.split_shot_prompt} \n    
+    const base_text = `${window.projinfo.split_shot_prompt} \n    
     ${tags_string}\n
     ${scene.sceneinfo.script}
     `;
@@ -121,7 +121,7 @@ export async function selectSceneFolder(scene) {
 
   const generateShotsFromJsonBtn = addSimpleButton('generate-shots-from-json-btn', 'Generate Shots from JSON',buttonContainer);
   generateShotsFromJsonBtn.addEventListener('click', async () => {    
-    shotdict = JSON.parse(scene.sceneinfo.shotsjson);
+    const shotdict = JSON.parse(scene.sceneinfo.shotsjson);
     for (const key in shotdict) {
       /*
       console.log('Generating shot:', key);
@@ -160,7 +160,7 @@ export async function selectSceneFolder(scene) {
   // copy prompts
   addSimpleButton('copy-prompts-btn', 'MJ Prompts',buttonContainer, async () => {  
      let prompts_string = ""
-     for(shot of scene.shots){
+     for(const shot of scene.shots){
         prompts_string += shot.shotinfo.prompt + "\n----\n";
      }
      console.log(prompts_string)
@@ -171,7 +171,7 @@ export async function selectSceneFolder(scene) {
   addSimpleButton('copy-prompts-tags-btn', 'MJ+TAGS',buttonContainer, async () => {  
      const tags_string = await scene.getTagsString()
      let prompts_string = ""
-     for(shot of scene.shots){
+     for(const shot of scene.shots){
         prompts_string += shot.shotinfo.prompt + "\n" + tags_string + "\n----\n";
      }
      console.log(prompts_string)
@@ -440,7 +440,7 @@ export async function CreateShotInfoCardButtons(shot,parent = null)
       console.log("SRC_IMAGE",srcImageHandle)
 
       if (srcImageHandle) {
-        img_upload_data = await kieUploadFile(srcImageHandle);
+        const img_upload_data = await kieUploadFile(srcImageHandle);
         console.log('Image upload data:', img_upload_data.downloadUrl);
         if (img_upload_data && img_upload_data.success)
         {

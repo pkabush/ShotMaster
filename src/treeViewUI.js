@@ -1,10 +1,10 @@
-import {loadBoundJson} from "./fileSystemUtils.js";
+import {loadBoundJson,copyDirectory} from "./fileSystemUtils.js";
 import {CreateTask} from "./Tasks.js";
 import {readArtbookData} from "./artbook.js";
 import {selectSceneFolder} from "./folderUI.js";
+import {artbookUI} from "./artbook.js";
 
-
-async function LoadShot(shotName, shotHandle,scene){
+export async function LoadShot(shotName, shotHandle,scene){
   const default_shotinfo = {
     finished: false 
   }
@@ -19,7 +19,7 @@ async function LoadShot(shotName, shotHandle,scene){
         scene:scene,
         // Functions
         async saveShotInfo() {
-            await saveBoundJson(this.shotinfo);
+            await this.shotinfo.save();
         },
         async saveTaskInfo() {
             await saveBoundJson(this.taskinfo);
@@ -157,7 +157,7 @@ async function LoadShot(shotName, shotHandle,scene){
   return shot;
 }
 
-async function LoadScene(sceneName, sceneHandle){
+export async function LoadScene(sceneName, sceneHandle){
   const default_sceneinfo = {
     finished: false,
     description: "",
@@ -165,9 +165,6 @@ async function LoadScene(sceneName, sceneHandle){
     shotsjson: "",
     script:"",
     tags: [],
-    // UI
-    ui_treeitem:null,
-    ui_scenepanel:null
   }          
 
   let sceneinfo = await loadBoundJson(sceneHandle, 'sceneinfo.json',default_sceneinfo);
@@ -177,6 +174,9 @@ async function LoadScene(sceneName, sceneHandle){
     handle: sceneHandle, 
     shots: [],    
     sceneinfo:sceneinfo,
+      // UI
+    ui_treeitem:null,
+    ui_scenepanel:null,
     // Functions
     async LoadShots() {
       this.shots = []
@@ -261,6 +261,7 @@ async function LoadScene(sceneName, sceneHandle){
         
         if (this.handle) { await window.scenesDirHandle.removeEntry(this.name, { recursive: true }); }
         this?.ui_treeitem?.remove?.();
+        this?.ui_scenepanel?.remove?.();
       } 
     },
 
@@ -316,7 +317,6 @@ async function updateTreeDict() {
   }
   //console.log('Updated treeDict:', window.scenes);
 }
-
 
 async function createShotLI(shot) {
     // ---- Build shot <li> ----

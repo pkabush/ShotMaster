@@ -1,3 +1,4 @@
+import {LoadScene} from "./treeViewUI";
 
 // BOUND JSON
 export async function loadBoundJson(handle,filename,defaultValue={}) {
@@ -28,9 +29,10 @@ async function saveBoundJson(data) {
 
 async function loadLocalTextFile(handle,filename) {
   try {
-    fileHandle = await handle.getFileHandle(filename, { create: false });
-    file = await fileHandle.getFile();
-    text = await file.text();
+    console.log("LOADING text file",handle,filename);
+    const fileHandle = await handle.getFileHandle(filename, { create: false });    
+    const file = await fileHandle.getFile();
+    const text = await file.text();
     return text
   } catch {
     console.log(`Failed to load local text file: ${filename}`);
@@ -67,7 +69,7 @@ async function saveLocalJsonFile(handle,filename,json) {
     }       
 }
 
-async function clipboardToJson() {
+export async function clipboardToJson() {
   try {
         window.updateStatus('Importing json from clipboard...');
         const text = await navigator.clipboard.readText();    
@@ -121,7 +123,7 @@ async function importShotDict(shot_name,shot_dict,sceneFolderHandle) {
 }
 
 // Splits Script into scenes and shots
-async function importScenesFromScript() {
+export async function importScenesFromScript() {
     function splitScenes(text) {
     return text
         .split(/(?=^SC_\S{1,64}\s*$)/m)
@@ -139,8 +141,7 @@ async function importScenesFromScript() {
         console.log("IMPORTING SCENES");
         const script_text = await loadLocalTextFile(window.rootDirHandle,'script.txt');
         const scenes = splitScenes(script_text);
-        for (new_scene of scenes) {
-           
+        for (let new_scene of scenes) {           
             const scene = window.scenes.find(s => s.name === new_scene.name);
             if (scene) {
                 console.log("Found:", scene.name);
@@ -173,7 +174,7 @@ async function getRelativePath(fileHandle, dirHandle, path = '') {
 }
 
 
-async function downloadURL(url, directoryHandle) {
+export async function downloadURL(url, directoryHandle) {
     try {
         console.log("DOWNLOADING:",url)
         const urlObj = new URL(url);
@@ -205,7 +206,7 @@ async function downloadURL(url, directoryHandle) {
 }
 
 
-async function copyDirectory(parentHandle, oldName, newName) {
+export async function copyDirectory(parentHandle, oldName, newName) {
   // Get the original directory
   const oldDir = await parentHandle.getDirectoryHandle(oldName);
 
@@ -225,4 +226,26 @@ async function copyDirectory(parentHandle, oldName, newName) {
       await newDir.resolve(await oldDir.getDirectoryHandle(name)); // move recursively
     }
   }
+}
+
+
+// File2Base64
+export async function fileToBase64(fileHandle) {
+  const file = await fileHandle.getFile();
+  const arrayBuffer = await file.arrayBuffer();
+
+  // Convert bytes → Base64
+  let binary = "";
+  const bytes = new Uint8Array(arrayBuffer);
+  const len = bytes.byteLength;
+
+  for (let i = 0; i < len; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  const base64 = btoa(binary);
+  return {
+    dataUrl: `data:${file.type};base64,${base64}`,
+    rawBase64: base64
+  };
 }

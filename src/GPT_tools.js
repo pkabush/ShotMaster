@@ -1,4 +1,6 @@
-const GPT = {
+import {fileToBase64} from "./fileSystemUtils";
+
+export const GPT = {
     async txt2txt(input,system_msg = "You are a helpful assistant.", images = [],schema = null) {
         try {
             const messages = [
@@ -100,7 +102,7 @@ const GPT = {
 
 }
 
-const OpenRouter = {
+export const OpenRouter = {
     async txt2txt(input) {
 
         const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
