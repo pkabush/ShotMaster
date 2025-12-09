@@ -117,6 +117,7 @@ document.getElementById('settings_btn').addEventListener('click', async () => {
   const container = document.createElement('div');
   await createEditableKeyField(window.userdata,"KIE_API_KEY",container)
   await createEditableKeyField(window.userdata,"GPT_API_KEY",container)
+  await createEditableKeyField(window.userdata,"Google_API_KEY",container)
   //https://openrouter.ai/
   await createEditableKeyField(window.userdata,"openrouter_API_KEY",container)
 

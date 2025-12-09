@@ -228,8 +228,6 @@ export async function copyDirectory(parentHandle, oldName, newName) {
   }
 }
 
-
-// File2Base64
 export async function fileToBase64(fileHandle) {
   const file = await fileHandle.getFile();
   const arrayBuffer = await file.arrayBuffer();
@@ -237,15 +235,36 @@ export async function fileToBase64(fileHandle) {
   // Convert bytes → Base64
   let binary = "";
   const bytes = new Uint8Array(arrayBuffer);
-  const len = bytes.byteLength;
 
-  for (let i = 0; i < len; i++) {
+  for (let i = 0; i < bytes.length; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
 
   const base64 = btoa(binary);
   return {
     dataUrl: `data:${file.type};base64,${base64}`,
-    rawBase64: base64
+    rawBase64: base64,
+    mime: file.type    
   };
+}
+
+function base64ToBlob(base64, mime = "image/png") {
+    const binary = atob(base64);
+    const len = binary.length;
+    const bytes = new Uint8Array(len);
+
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+
+    return new Blob([bytes], { type: mime });
+}
+
+export async function saveBase64Image(base64, fileName, directoryHandle) {
+    const blob = base64ToBlob(base64, "image/png");
+
+    const fileHandle = await directoryHandle.getFileHandle(fileName, { create: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
 }

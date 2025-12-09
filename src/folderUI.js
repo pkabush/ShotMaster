@@ -2,7 +2,7 @@ import {createResizableContainer ,CreateButtonsContainer,createHorizontalContain
 import {createEditableKeyField,addSimpleButton,editableJsonField,createSpacer } from "./jsonEditElement.js";
 import {artbookUI } from "./artbook.js";
 import {createTaskContainer} from "./Tasks.js";
-import {GPT,OpenRouter} from "./GPT_tools.js";
+import {GPT,OpenRouter,GGAI} from "./GPT_tools.js";
 import {kieGenerate_txt2img,postKieTask,kieGenerate_RunwayImg2Video,kieUploadFile,checkTaskResults} from "./kieGenerate.js"
 import { downloadURL } from "./fileSystemUtils.js";
 
@@ -265,6 +265,105 @@ export async function CreateShotInfoCard(shot,parent = null) {
   if (parent) parent.appendChild(container);
   return container;
 }
+// Shot Info Card Buttons
+export async function CreateShotInfoCardButtons(shot,parent = null)
+{
+  const buttonContainer = CreateButtonsContainer(parent);
+  
+  // --- TEST button ---
+  const testBtn = addSimpleButton('testBtn', 'Log shot', buttonContainer);
+  testBtn.addEventListener('click', async () => { console.log(shot); });
+
+  const updateBtn = addSimpleButton('testBtn', 'Update', buttonContainer);
+  updateBtn.addEventListener('click', async () => { shot.updateEvent() });
+
+  // --- Shot Status button ---
+  const changeShotStatusBtn = await createShotStatusButton(shot,buttonContainer);  
+
+  // --- Create Resolve FCPXML button ---
+  const createResolveXMLButton = addSimpleButton('create-resolve-xml-btn', 'Generate Resolve FCPXML',buttonContainer);
+  createResolveXMLButton.addEventListener('click', async () => {    
+      const resultsFolder = await window.currentFolderHandle.getDirectoryHandle("results", { create: false });
+      await generateFCPXMLFromFolder(resultsFolder);
+  });
+
+  // TXT 2 Image
+  const txt2ImageBtn = addSimpleButton('txt2imgBtn',"txt2img", buttonContainer);
+  txt2ImageBtn.addEventListener('click', async () => {   
+    console.log("Clicked txt2img:",shot); 
+    try {
+        const _task = await kieGenerate_txt2img(shot.shotinfo.prompt);
+        const task = await shot.addKieTask(_task);  
+        parent?.taskContainer?.addTask(task);
+
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  // IMG 2 VIDEO
+  const img2videoBtn = addSimpleButton('img2videoBtn',"img2video", buttonContainer);
+  img2videoBtn.addEventListener('click', async () => {   
+    console.log("Clicked img2video:",shot); 
+    try {
+      const srcImageHandle = await shot.getSrcImageHandle();
+      console.log("SRC_IMAGE",srcImageHandle)
+
+      if (srcImageHandle) {
+        const img_upload_data = await kieUploadFile(srcImageHandle);
+        console.log('Image upload data:', img_upload_data.downloadUrl);
+        if (img_upload_data && img_upload_data.success)
+        {
+          const _task = await kieGenerate_RunwayImg2Video(shot.shotinfo.prompt, img_upload_data.downloadUrl);      
+          const task = await shot.addKieTask(_task);  
+          parent?.taskContainer?.addTask(task);
+        }
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  });
+
+  // URL to IMG
+  const url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
+  url2imgBtn.addEventListener('click', async () => {   
+    try {
+        const clipboardText = await navigator.clipboard.readText();
+        if (!clipboardText) { return; }
+        
+        let url;
+        try {
+            url = new URL(clipboardText).href;
+        } catch (err) {
+            //console.log("Clipboard does not contain a valid URL:", clipboardText);
+            return;
+        }
+
+        const resultsHandle = await shot.handle.getDirectoryHandle("results", { create: true });
+        await downloadURL(url, resultsHandle);
+        console.log("Download completed!");
+        await shot.updateEvent(); 
+    } catch (err) {
+        //console.error("Error in downloadClipboardUrl:", err);
+    }
+  });
+
+  addSimpleButton('btn',"Nano Img2Img", buttonContainer, async () => {
+      const images = []      
+      for ( const tag of await shot.scene.getTags()) {
+        if (tag) {
+          const img = await tag.getBase64();
+          images.push({ rawBase64: img.rawBase64, mime: img.mime });
+        }
+      }  
+      const resDir = await shot.getImagesDir();
+      await GGAI.img2img(shot.shotinfo.prompt,resDir,images);
+      shot.updateEvent();
+  });
+
+  return buttonContainer
+}
+
 // Shot Preview Strip
 export async function createShotPreviewStrip(scene) {  
 
@@ -395,93 +494,6 @@ export async function CreateShotPreview(shot) {
   return container;
 }
 
-// Shot Info Card Buttons
-export async function CreateShotInfoCardButtons(shot,parent = null)
-{
-  const buttonContainer = CreateButtonsContainer(parent);
-  
-  // --- TEST button ---
-  const testBtn = addSimpleButton('testBtn', 'Log shot', buttonContainer);
-  testBtn.addEventListener('click', async () => { console.log(shot); });
-
-  const updateBtn = addSimpleButton('testBtn', 'Update', buttonContainer);
-  updateBtn.addEventListener('click', async () => { shot.updateEvent() });
-
-  // --- Shot Status button ---
-  const changeShotStatusBtn = await createShotStatusButton(shot,buttonContainer);  
-
-  // --- Create Resolve FCPXML button ---
-  const createResolveXMLButton = addSimpleButton('create-resolve-xml-btn', 'Generate Resolve FCPXML',buttonContainer);
-  createResolveXMLButton.addEventListener('click', async () => {    
-      const resultsFolder = await window.currentFolderHandle.getDirectoryHandle("results", { create: false });
-      await generateFCPXMLFromFolder(resultsFolder);
-  });
-
-  // TXT 2 Image
-  const txt2ImageBtn = addSimpleButton('txt2imgBtn',"txt2img", buttonContainer);
-  txt2ImageBtn.addEventListener('click', async () => {   
-    console.log("Clicked txt2img:",shot); 
-    try {
-        const _task = await kieGenerate_txt2img(shot.shotinfo.prompt);
-        const task = await shot.addKieTask(_task);  
-        parent?.taskContainer?.addTask(task);
-
-    } catch (error) {
-      console.error(error);
-    }
-  });
-
-  // IMG 2 VIDEO
-  const img2videoBtn = addSimpleButton('img2videoBtn',"img2video", buttonContainer);
-  img2videoBtn.addEventListener('click', async () => {   
-    console.log("Clicked img2video:",shot); 
-    try {
-      const srcImageHandle = await shot.getSrcImageHandle();
-      console.log("SRC_IMAGE",srcImageHandle)
-
-      if (srcImageHandle) {
-        const img_upload_data = await kieUploadFile(srcImageHandle);
-        console.log('Image upload data:', img_upload_data.downloadUrl);
-        if (img_upload_data && img_upload_data.success)
-        {
-          const _task = await kieGenerate_RunwayImg2Video(shot.shotinfo.prompt, img_upload_data.downloadUrl);      
-          const task = await shot.addKieTask(_task);  
-          parent?.taskContainer?.addTask(task);
-        }
-      }
-    } catch (error) {
-      console.error(error);
-    }
-  });
-
-  // URL to IMG
-  const url2imgBtn = addSimpleButton('url2imgBtn',"importURL", buttonContainer);
-  url2imgBtn.addEventListener('click', async () => {   
-    try {
-        const clipboardText = await navigator.clipboard.readText();
-        if (!clipboardText) { return; }
-        
-        let url;
-        try {
-            url = new URL(clipboardText).href;
-        } catch (err) {
-            //console.log("Clipboard does not contain a valid URL:", clipboardText);
-            return;
-        }
-
-        const resultsHandle = await shot.handle.getDirectoryHandle("results", { create: true });
-        await downloadURL(url, resultsHandle);
-        console.log("Download completed!");
-        await shot.updateEvent(); 
-    } catch (err) {
-        //console.error("Error in downloadClipboardUrl:", err);
-    }
-  });
-
-
-
-  return buttonContainer
-}
 // SHOT STATUS TOGGLE
 export async function createShotStatusButton(shot,parent = null)
 {

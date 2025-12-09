@@ -147,8 +147,10 @@ export async function LoadShot(shotName, shotHandle,scene){
                 this.scene.ui_treeitem.update();
                 this.shotinfo.save();                
             }
-        }
-
+        },
+        async getImagesDir(){
+          return await shot.handle.getDirectoryHandle("results", { create: true });
+        },
 
         // SHOT DICT END
     }   

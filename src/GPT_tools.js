@@ -1,4 +1,5 @@
-import {fileToBase64} from "./fileSystemUtils";
+import { GoogleGenAI } from "@google/genai";
+import {fileToBase64,saveBase64Image} from "./fileSystemUtils";
 
 export const GPT = {
     async txt2txt(input,system_msg = "You are a helpful assistant.", images = [],schema = null) {
@@ -132,3 +133,76 @@ export const OpenRouter = {
 
 }
 
+export const GGAI = {
+    init() { 
+        if (this.ai  == null) 
+        this.ai = new GoogleGenAI({apiKey:window.userdata.Google_API_KEY});
+    },
+
+    async img2img(prompt,handle,images) {
+        this.init();
+
+        //Simple Text
+        /*
+        const response = await this.ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: "Explain how AI works in a few words",
+        });
+        console.log("GOOGLE RESPONSE",response.text);
+        */
+       
+        // Generate Image
+        /*
+        const payload = {
+            model: "gemini-2.5-flash-image",
+            contents: prompt,
+        }
+        console.log("Gemini Payload",payload);
+        */
+
+
+        // Img 2 Img
+        const contents = [];
+        contents.push({ text: prompt });
+
+        console.log("images")
+        // Add all images
+        for (const img of images) {
+            if (!img || !img.rawBase64 || !img.mime) continue;
+            contents.push({
+                inlineData: { data: img.rawBase64, mimeType: img.mime }
+            });
+        }
+
+        const payload = {
+            model: "gemini-2.5-flash-image",
+            contents,
+            config: {
+                imageConfig: {
+                    aspectRatio: "9:16",
+                    //imageSize: "1K",
+            },
+    },
+        };
+        console.log("Gemini Payload",payload);
+
+        const response = await this.ai.models.generateContent(payload);
+        console.log("GEMINI RES",response);
+
+        for (const part of response.candidates[0].content.parts) {
+            if (part.text) {
+                console.log(part.text);
+            } 
+            if (part.inlineData) {
+                const imageData = part.inlineData.data;
+                const base64 = part.inlineData.data; 
+                await saveBase64Image(base64, `${response.responseId}.png`, handle);
+                console.log("SAVED IMAGE");                
+            }
+        }        
+    }
+
+
+
+
+}

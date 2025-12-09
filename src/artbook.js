@@ -2,7 +2,7 @@ import {loadBoundJson} from "./fileSystemUtils.js";
 import {createTabContainer,CreateButtonsContainer} from "./Containers.js";
 import {editableJsonField,addSimpleButton} from "./jsonEditElement.js";
 import {GPT,OpenRouter} from "./GPT_tools.js";
-
+import {fileToBase64} from "./fileSystemUtils.js";
 
 export async function readArtbookData(){
     window.artbook = [];
@@ -166,6 +166,9 @@ export async function LoadArtItem(itemName, itemHandle,itemType){
 
                             return panel;
                         },
+                        async getBase64() {
+                            return await fileToBase64(this.handle);
+                        }
                      })
                 }
         },
